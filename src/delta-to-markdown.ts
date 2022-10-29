@@ -1,5 +1,10 @@
 import { CustomNode, NodeType } from './utils/Node';
 
+export enum ListType {
+    Bullet = 'bullet',
+    Ordered = 'ordered'
+}
+
 class DeltaToMarkdown {
     private readonly _HEADER_CHARS = [
         { before: '', after: '=' },
@@ -63,16 +68,36 @@ class DeltaToMarkdown {
         }
     }
 
-    private _getListFormatting(listType: 'bullet' | 'ordered', indent: number, numeric: number, content: string): string {
-        return `${Array(indent + 1).join('    ')}${listType === 'bullet' ? '*' : numeric + '.'} ${content}`;
+    private _getListFormatting(listType: ListType, indent: number, numeric: number, content: string): string {
+        return `${Array(indent + 1).join('    ')}${listType === ListType.Bullet ? '*' : numeric + '.'} ${content}`;
     }
 
-    private _getOtherListType(listType: 'bullet' | 'ordered'): 'bullet' | 'ordered' {
-        if (listType === 'bullet') {
-            return 'ordered';
+    private _getOtherListType(listType: ListType.Bullet | ListType.Ordered): ListType.Bullet | ListType.Ordered {
+        if (listType === ListType.Bullet) {
+            return ListType.Ordered;
         }
 
-        return 'bullet';
+        return ListType.Bullet;
+    }
+
+    private _clearListSubLevels(listType: ListType, indentCount: number): void {
+        let allSubIndent = indentCount + 1;
+        while (this._listLevel[listType][allSubIndent]) {
+            delete this._listLevel[listType][allSubIndent];
+            allSubIndent++;
+        }
+    }
+
+    private _clearOtherListTypeAncestor(listType: ListType, indentCount: number): void {
+        const otherListType = this._getOtherListType(listType);
+
+        let allParentIndent = indentCount;
+        while (allParentIndent > -1) {
+            if (this._listLevel[otherListType] && this._listLevel[otherListType][allParentIndent]) {
+                delete this._listLevel[otherListType][allParentIndent];
+            }
+            allParentIndent--;
+        }
     }
 
     private _getNodeText(node: CustomNode | null, content: string, options: any): string {
@@ -119,16 +144,8 @@ class DeltaToMarkdown {
 
                 this._listLevel[listType][indentCount]++;
 
-                let allSubIndent = indentCount + 1;
-                while (this._listLevel[listType][allSubIndent]) {
-                    delete this._listLevel[listType][allSubIndent];
-                    allSubIndent++;
-                }
-
-                const otherListType = this._getOtherListType(listType);
-                if (this._listLevel[otherListType] && this._listLevel[otherListType][indentCount]) {
-                    delete this._listLevel[otherListType][indentCount];
-                }
+                this._clearListSubLevels(listType, indentCount);
+                this._clearOtherListTypeAncestor(listType, indentCount);
 
                 return this._getListFormatting(listType, indentCount, this._listLevel[listType][indentCount], content);
 
