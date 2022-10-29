@@ -1,0 +1,23 @@
+{
+  "name": "delta-md-converter",
+  "version": "0.0.1",
+  "description": "Convert delta from/to markdown",
+  "main": "./src/index.js",
+  "scripts": {
+    "compile": "./node_modules/.bin/gulp.cmd",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "delta",
+    "markdown",
+    "quill",
+    "editor"
+  ],
+  "author": "Workiom Inc.",
+  "license": "MIT",
+  "devDependencies": {
+    "gulp": "^4.0.2",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "typescript": "^4.8.4"
+  }
+}
