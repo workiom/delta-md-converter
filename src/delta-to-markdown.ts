@@ -14,48 +14,49 @@ class DeltaToMarkdown {
 
     private _listLevel: any = {};
 
-    private _getNodeType(attribute: any): NodeType | null {
+    private _getNodeType(attribute: any): NodeType[] {
         if (!attribute) {
-            return null;
+            return [];
         }
 
+        const nodeTypes = [];
         if (attribute['bold']) {
-            return NodeType.Bold;
+            nodeTypes.push(NodeType.Bold);
         }
 
         if (attribute['italic']) {
-            return NodeType.Italic;
+            nodeTypes.push(NodeType.Italic);
         }
 
         if (attribute['strike']) {
-            return NodeType.Strike;
+            nodeTypes.push(NodeType.Strike);
         }
 
         if (attribute['link']) {
-            return NodeType.Link;
+            nodeTypes.push(NodeType.Link);
         }
 
         if (attribute['header']) {
-            return NodeType.Header;
+            nodeTypes.push(NodeType.Header);
         }
 
         if (attribute['blockquote']) {
-            return NodeType.Blockquote;
+            nodeTypes.push(NodeType.Blockquote);
         }
 
         if (attribute['code']) {
-            return NodeType.Code;
+            nodeTypes.push(NodeType.Code);
         }
 
         if (attribute['code-block']) {
-            return NodeType.CodeBlock;
+            nodeTypes.push(NodeType.CodeBlock);
         }
 
         if (attribute['list']) {
-            return NodeType.List;
+            nodeTypes.push(NodeType.List);
         }
 
-        return null;
+        return nodeTypes;
     }
 
     private _getHeaderFormatting(level: number, content: string): string {
@@ -101,36 +102,46 @@ class DeltaToMarkdown {
     }
 
     private _getNodeText(node: CustomNode | null, content: string, options: any): string {
-        if (node?.type && node?.type !== NodeType.List) {
+        const nodeTypes = node?.type || [];
+        if (nodeTypes.length > 0 && !nodeTypes.includes(NodeType.List)) {
             this._listLevel = {};
         }
 
-        switch (node?.type) {
-            case NodeType.Bold:
-                return `**${content}**`;
 
-            case NodeType.Italic:
-                return `_${content}_`;
+        for (const nodeType of nodeTypes) {
+            if (nodeType == NodeType.Bold) {
+                content = `**${content}**`;
+            }
 
-            case NodeType.Strike:
-                return `~~${content}~~`;
+            if (nodeType == NodeType.Italic) {
+                content = `_${content}_`;
+            }
 
-            case NodeType.Link:
-                return `[${content}](${options.link})`;
+            if (nodeType == NodeType.Strike) {
+                content = `~~${content}~~`;
+            }
 
-            case NodeType.Header:
-                return this._getHeaderFormatting(options.header, content);
+            if (nodeType == NodeType.Link) {
+                content = `[${content}](${options.link})`;
+            }
 
-            case NodeType.Blockquote:
-                return `> ${content}`;
+            if (nodeType == NodeType.Header) {
+                content = this._getHeaderFormatting(options.header, content);
+            }
 
-            case NodeType.Code:
-                return `\`${content}\``;
+            if (nodeType == NodeType.Blockquote) {
+                content = `> ${content}`;
+            }
 
-            case NodeType.CodeBlock:
-                return `    ${content}`;
+            if (nodeType == NodeType.Code) {
+                content = `\`${content}\``;
+            }
 
-            case NodeType.List:
+            if (nodeType == NodeType.CodeBlock) {
+                content = `    ${content}`;
+            }
+
+            if (nodeType == NodeType.List) {
                 const listType = options.list;
                 const indentCount = options.indent ? options.indent : 0;
 
@@ -147,27 +158,26 @@ class DeltaToMarkdown {
                 this._clearListSubLevels(listType, indentCount);
                 this._clearOtherListTypeAncestor(listType, indentCount);
 
-                return this._getListFormatting(listType, indentCount, this._listLevel[listType][indentCount], content);
-
-            default:
-                if (content === '\n') {
-                    return '\n\n';
-                }
-
-                return content;
+                content = this._getListFormatting(listType, indentCount, this._listLevel[listType][indentCount], content);
+            }
         }
+
+        if (nodeTypes.length === 0) {
+            if (content === '\n') {
+                content = '\n\n';
+            }
+        }
+
+        return content;
     }
 
     private _shouldMergeWithPrevious(node: CustomNode | null): boolean {
-        switch (node?.type) {
-            case NodeType.Header:
-            case NodeType.Blockquote:
-            case NodeType.CodeBlock:
-            case NodeType.List:
-                return true;
-
-            default:
-                return false;
+        const nodeTypes = node?.type || [];
+        const toMergeTypes = [NodeType.Header, NodeType.Blockquote, NodeType.CodeBlock, NodeType.List];
+        if (toMergeTypes.some(mergeAbleType => nodeTypes.includes(mergeAbleType))) {
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -181,7 +191,7 @@ class DeltaToMarkdown {
 
             if (text) {
                 innerNode = new CustomNode();
-                innerNode.type = null;
+                innerNode.type = [];
                 innerNode.options = null;
                 innerNode.textContent = text;
                 innerNode.previousNode = lastNode || null;
@@ -191,7 +201,7 @@ class DeltaToMarkdown {
 
             if (i + 1 < textArray.length) {
                 innerNode = new CustomNode();
-                innerNode.type = null;
+                innerNode.type = [];
                 innerNode.options = null;
                 innerNode.textContent = '\n';
                 innerNode.previousNode = lastNode || null;
@@ -201,12 +211,12 @@ class DeltaToMarkdown {
         }
 
         if (lastNode) {
-            lastNode.type = sdNode ? sdNode.type : null;
+            lastNode.type = sdNode ? sdNode.type : [];
             lastNode.options = sdNode?.options;
         }
 
         const nextNode = new CustomNode();
-        nextNode.type = null;
+        nextNode.type = [];
         nextNode.options = null;
         nextNode.textContent = sdNode ? sdNode.textContent : '';
         nextNode.previousNode = lastNode || null;

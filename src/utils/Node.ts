@@ -11,7 +11,7 @@ export enum NodeType {
 }
 
 export class CustomNode {
-    type: NodeType | null = null;
+    type: NodeType[] = [];
     textContent: string = '';
     previousNode: CustomNode | null = null;
     nextNode: CustomNode | null = null;
