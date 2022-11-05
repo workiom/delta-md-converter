@@ -1,8 +1,13 @@
 {
-    "files": ["src/**.ts", "src/utils/**.ts"],
-    // "files": ["src/index.ts"],
-    "compilerOptions": {
-      "noImplicitAny": true,
-      "target": "es5"
-    }
-  }
+  "compilerOptions": {
+    "target": "es6",
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "declaration": true,
+    "outDir": "./lib",
+    "strict": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["src", "types"],
+  "exclude": ["node_modules", "**/__tests__/*"]
+}

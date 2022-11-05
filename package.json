@@ -2,10 +2,18 @@
   "name": "delta-md-converter",
   "version": "0.0.1",
   "description": "Convert delta from/to markdown",
-  "main": "./src/index.js",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*"
+  ],
+  "sideEffects": false,
+  "type": "module",
   "scripts": {
     "compile": "gulp",
-    "test": "jest"
+    "build": "tsc",
+    "build:w": "tsc -w",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "keywords": [
     "delta",
@@ -20,21 +28,11 @@
     "gulp": "^4.0.2",
     "gulp-typescript": "^6.0.0-alpha.1",
     "jest": "^29.2.2",
+    "js-lexer": "^0.1.2",
     "ts-jest": "^29.0.3",
     "typescript": "^4.8.4"
   },
-  "jest": {
-    "roots": [
-      "<rootDir>/test"
-    ],
-    "transform": {
-      ".(ts|tsx)": "ts-jest"
-    },
-    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js"
-    ]
+  "dependencies": {
+    "simple-text-parser": "^2.1.1"
   }
 }
