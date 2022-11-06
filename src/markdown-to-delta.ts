@@ -25,19 +25,19 @@ class MarkdownToDelta {
     private _parseText(text: string, defaultTypes: NodeType[] = []): any {
         const parser = new Parser();
         // Bold
-        parser.addRule(/\*\*(.*)\*\*/gi, (tag, cleanTag): any => {
+        parser.addRule(/\*\*((?:[^\*]\*?)*)\*\*/gi, (tag, cleanTag): any => {
             return { type: [...defaultTypes, NodeType.Bold], text: tag, value: {text: cleanTag} };
         });
         // Italic
-        parser.addRule(/_(.*)_/gi, (tag, cleanTag): any => {
+        parser.addRule(/\_([^_]*)\_/gi, (tag, cleanTag): any => {
             return { type: [...defaultTypes, NodeType.Italic], text: tag, value: {text: cleanTag} };
         });
         // Strike
-        parser.addRule(/~~(.*)~~/gi, (tag, cleanTag): any => {
+        parser.addRule(/\~\~((?:[^\~]\~?)*)\~\~/gi, (tag, cleanTag): any => {
             return { type: [...defaultTypes, NodeType.Strike], text: tag, value: {text: cleanTag} };
         });
         // Link
-        parser.addRule(/\[(.*)\]\((.*)\)/gi, (tag, linkLabel, linkUrl): any => {
+        parser.addRule(/\[([^\]]*)\]\(([^\)]*)\)/gi, (tag, linkLabel, linkUrl): any => {
             return { type: [...defaultTypes, NodeType.Link], text: tag, value: {text: linkLabel, options: {link: linkUrl}} };
         });
         // Header 1
@@ -75,7 +75,7 @@ class MarkdownToDelta {
             return { type: [...defaultTypes, NodeType.Blockquote], text: tag, value: {text: cleanTag} };
         });
         // Code
-        parser.addRule(/`(.*)`/gi, (tag, cleanTag): any => {
+        parser.addRule(/\`([^`]*)\`/gi, (tag, cleanTag): any => {
             return { type: [...defaultTypes, NodeType.Code], text: tag, value: {text: cleanTag} };
         });
         // Block Code

@@ -388,6 +388,32 @@ describe('Delta to Markdown', () => {
 
         expect(md).toBe("1. Ordered 1\n\n2. Ordered 2\n\n    Code Block");
     });
+
+    test('Combine Bold And Italic', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            {
+                "attributes": {
+                    "bold": true
+                },
+                "insert": "Bold"
+            },
+            {
+                "insert": " "
+            },
+            {
+                "attributes": {
+                    "italic": true,
+                    "bold": true
+                },
+                "insert": "Bold & Italic"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+
+        expect(md).toBe("**Bold** **_Bold & Italic_**");
+    });
 });
 
 describe('Markdown to Delta', () => {
@@ -787,6 +813,32 @@ describe('Markdown to Delta', () => {
                     "code-block": true
                 },
                 "insert": "\n"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+    });
+
+    test('Combine Bold And Italic', () => {
+        const ops = deltaToMdConverter.markdownToDelta("**Bold** **_Bold & Italic_**");
+
+        expect(ops).toStrictEqual([
+            {
+                "attributes": {
+                    "bold": true
+                },
+                "insert": "Bold"
+            },
+            {
+                "insert": " "
+            },
+            {
+                "attributes": {
+                    "italic": true,
+                    "bold": true
+                },
+                "insert": "Bold & Italic"
             },
             {
                 "insert": "\n"

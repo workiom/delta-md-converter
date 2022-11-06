@@ -107,22 +107,26 @@ class DeltaToMarkdown {
             this._listLevel = {};
         }
 
-
+        let postfix = '', prefix = '';
         for (const nodeType of nodeTypes) {
             if (nodeType == NodeType.Bold) {
-                content = `**${content}**`;
+                prefix  = prefix + '**';
+                postfix = '**' + postfix;
             }
 
             if (nodeType == NodeType.Italic) {
-                content = `_${content}_`;
+                prefix  = prefix + '_';
+                postfix = '_' + postfix;
             }
 
             if (nodeType == NodeType.Strike) {
-                content = `~~${content}~~`;
+                prefix  = prefix + '~~';
+                postfix = '~~' + postfix;
             }
 
             if (nodeType == NodeType.Link) {
-                content = `[${content}](${options.link})`;
+                prefix = prefix + '[';
+                postfix = `](${options.link})` + postfix;
             }
 
             if (nodeType == NodeType.Header) {
@@ -130,15 +134,16 @@ class DeltaToMarkdown {
             }
 
             if (nodeType == NodeType.Blockquote) {
-                content = `> ${content}`;
+                prefix = '> ' + prefix;
             }
 
             if (nodeType == NodeType.Code) {
-                content = `\`${content}\``;
+                prefix = prefix + '`';
+                postfix = '`' + postfix;
             }
 
             if (nodeType == NodeType.CodeBlock) {
-                content = `    ${content}`;
+                prefix = '    ' + prefix;
             }
 
             if (nodeType == NodeType.List) {
@@ -162,6 +167,7 @@ class DeltaToMarkdown {
             }
         }
 
+        content = prefix + content + postfix;
         if (nodeTypes.length === 0) {
             if (content === '\n') {
                 content = '\n\n';
