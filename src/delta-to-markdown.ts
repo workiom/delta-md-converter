@@ -117,10 +117,31 @@ class DeltaToMarkdown {
                 return `**${subBoldContent ? subBoldContent : content}**`;
 
             case NodeType.Italic:
-                return `_${content}_`;
+                let subItalicContent = '';
+                const subItalicNodes = node?.children || [];
+                for (const subNode of subItalicNodes) {
+                    subItalicContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
+                }
+
+                return `_${subItalicContent ? subItalicContent : content}_`;
 
             case NodeType.Strike:
-                return `~~${content}~~`;
+                let subStrikeContent = '';
+                const subStrikeNodes = node?.children || [];
+                for (const subNode of subStrikeNodes) {
+                    subStrikeContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
+                }
+
+                return `~~${subStrikeContent ? subStrikeContent : content}~~`;
+
+            case NodeType.Code:
+                let subCodeContent = '';
+                const subCodeNodes = node?.children || [];
+                for (const subNode of subCodeNodes) {
+                    subCodeContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
+                }
+
+                return `\`${subCodeContent ? subCodeContent : content}\``;
 
             case NodeType.Link:
                 return `[${content}](${options.link})`;
@@ -142,9 +163,6 @@ class DeltaToMarkdown {
                 }
 
                 return `> ${subBlockQuoteContent}`;
-
-            case NodeType.Code:
-                return `\`${content}\``;
 
             case NodeType.CodeBlock:
                 let subCodeBlockContent = '';

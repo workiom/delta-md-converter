@@ -415,6 +415,23 @@ describe('Delta to Markdown', () => {
         expect(md).toBe("**Bold** **_Bold & Italic_**");
     });
 
+    test('Combine Italic And Strike', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            {
+                "attributes": {
+                    "strike": true,
+                    "italic": true
+                },
+                "insert": "Italic And Strike"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+
+        expect(md).toBe("_~~Italic And Strike~~_");
+    });
+
     test('Bold Inside List', () => {
         const md = deltaToMdConverter.deltaToMarkdown([
             {
@@ -887,6 +904,24 @@ describe('Markdown to Delta', () => {
                     "bold": true
                 },
                 "insert": "Bold & Italic"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+    });
+
+    test('Combine Italic And Strike', () => {
+
+        const ops = deltaToMdConverter.markdownToDelta("_~~Italic And Strike~~_");
+
+        expect(ops).toStrictEqual([
+            {
+                "attributes": {
+                    "strike": true,
+                    "italic": true
+                },
+                "insert": "Italic And Strike"
             },
             {
                 "insert": "\n"
