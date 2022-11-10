@@ -414,6 +414,54 @@ describe('Delta to Markdown', () => {
 
         expect(md).toBe("**Bold** **_Bold & Italic_**");
     });
+
+    test('Bold Inside List', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            {
+                "attributes": {
+                    "bold": true
+                },
+                "insert": "Bold"
+            },
+            {
+                "attributes": {
+                    "list": "bullet"
+                },
+                "insert": "\n"
+            }
+        ]);
+
+        expect(md).toBe("* **Bold**");
+    });
+
+    test('Bold & Italic Inside List', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            {
+                "attributes": {
+                    "bold": true
+                },
+                "insert": "Bold"
+            },
+            {
+                "insert": " "
+            },
+            {
+                "attributes": {
+                    "italic": true,
+                    "bold": true
+                },
+                "insert": "Bold & Italic"
+            },
+            {
+                "attributes": {
+                    "list": "bullet"
+                },
+                "insert": "\n"
+            }
+        ]);
+
+        expect(md).toBe("* **Bold** **_Bold & Italic_**");
+    });
 });
 
 describe('Markdown to Delta', () => {
@@ -845,4 +893,57 @@ describe('Markdown to Delta', () => {
             }
         ]);
     });
-})
+
+    test('Bold Inside List', () => {
+        const ops = deltaToMdConverter.markdownToDelta("* **Bold**");
+
+        expect(ops).toStrictEqual([
+            {
+                "attributes": {
+                    "bold": true
+                },
+                "insert": "Bold"
+            },
+            {
+                "attributes": {
+                    "list": "bullet"
+                },
+                "insert": "\n"
+            }, {
+                "insert": "\n"
+            }
+        ]);
+    });
+
+    test('Bold & Italic Inside List', () => {
+        const ops = deltaToMdConverter.markdownToDelta("* **Bold** **_Bold & Italic_**");
+
+        expect(ops).toStrictEqual([
+            {
+                "attributes": {
+                    "bold": true
+                },
+                "insert": "Bold"
+            },
+            {
+                "insert": " "
+            },
+            {
+                "attributes": {
+                    "italic": true,
+                    "bold": true
+                },
+                "insert": "Bold & Italic"
+            },
+            {
+                "attributes": {
+                    "list": "bullet"
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+    });
+});

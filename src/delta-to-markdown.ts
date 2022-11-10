@@ -14,49 +14,49 @@ class DeltaToMarkdown {
 
     private _listLevel: any = {};
 
-    private _getNodeType(attribute: any): NodeType[] {
+    private _getNodeTypes(attribute: any): NodeType[] {
         if (!attribute) {
             return [];
         }
 
-        const nodeTypes = [];
+        const types: NodeType[] = [];
         if (attribute['bold']) {
-            nodeTypes.push(NodeType.Bold);
+            types.push(NodeType.Bold);
         }
 
         if (attribute['italic']) {
-            nodeTypes.push(NodeType.Italic);
+            types.push(NodeType.Italic);
         }
 
         if (attribute['strike']) {
-            nodeTypes.push(NodeType.Strike);
+            types.push(NodeType.Strike);
         }
 
         if (attribute['link']) {
-            nodeTypes.push(NodeType.Link);
+            types.push(NodeType.Link);
         }
 
         if (attribute['header']) {
-            nodeTypes.push(NodeType.Header);
+            types.push(NodeType.Header);
         }
 
         if (attribute['blockquote']) {
-            nodeTypes.push(NodeType.Blockquote);
+            types.push(NodeType.Blockquote);
         }
 
         if (attribute['code']) {
-            nodeTypes.push(NodeType.Code);
+            types.push(NodeType.Code);
         }
 
         if (attribute['code-block']) {
-            nodeTypes.push(NodeType.CodeBlock);
+            types.push(NodeType.CodeBlock);
         }
 
         if (attribute['list']) {
-            nodeTypes.push(NodeType.List);
+            types.push(NodeType.List);
         }
 
-        return nodeTypes;
+        return types;
     }
 
     private _getHeaderFormatting(level: number, content: string): string {
@@ -101,52 +101,61 @@ class DeltaToMarkdown {
         }
     }
 
-    private _getNodeText(node: CustomNode | null, content: string, options: any): string {
-        const nodeTypes = node?.type || [];
-        if (nodeTypes.length > 0 && !nodeTypes.includes(NodeType.List)) {
+    private _getNodeText(node: CustomNode | null, content: string, options: any, skipResettingList = false): string {
+        if (node?.type && node?.type !== NodeType.List && !skipResettingList) {
             this._listLevel = {};
         }
 
-        let postfix = '', prefix = '';
-        for (const nodeType of nodeTypes) {
-            if (nodeType == NodeType.Bold) {
-                prefix  = prefix + '**';
-                postfix = '**' + postfix;
-            }
+        switch (node?.type) {
+            case NodeType.Bold:
+                let subBoldContent = '';
+                const subBoldNodes = node?.children || [];
+                for (const subNode of subBoldNodes) {
+                    subBoldContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
+                }
 
-            if (nodeType == NodeType.Italic) {
-                prefix  = prefix + '_';
-                postfix = '_' + postfix;
-            }
+                return `**${subBoldContent ? subBoldContent : content}**`;
 
-            if (nodeType == NodeType.Strike) {
-                prefix  = prefix + '~~';
-                postfix = '~~' + postfix;
-            }
+            case NodeType.Italic:
+                return `_${content}_`;
 
-            if (nodeType == NodeType.Link) {
-                prefix = prefix + '[';
-                postfix = `](${options.link})` + postfix;
-            }
+            case NodeType.Strike:
+                return `~~${content}~~`;
 
-            if (nodeType == NodeType.Header) {
-                content = this._getHeaderFormatting(options.header, content);
-            }
+            case NodeType.Link:
+                return `[${content}](${options.link})`;
 
-            if (nodeType == NodeType.Blockquote) {
-                prefix = '> ' + prefix;
-            }
+            case NodeType.Header:
+                let subHeaderContent = '';
+                const subHeaderNodes = node?.children || [];
+                for (const subNode of subHeaderNodes) {
+                    subHeaderContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
+                }
 
-            if (nodeType == NodeType.Code) {
-                prefix = prefix + '`';
-                postfix = '`' + postfix;
-            }
+                return this._getHeaderFormatting(options.header, subHeaderContent);
 
-            if (nodeType == NodeType.CodeBlock) {
-                prefix = '    ' + prefix;
-            }
+            case NodeType.Blockquote:
+                let subBlockQuoteContent = '';
+                const subBlockQuoteNodes = node?.children || [];
+                for (const subNode of subBlockQuoteNodes) {
+                    subBlockQuoteContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
+                }
 
-            if (nodeType == NodeType.List) {
+                return `> ${subBlockQuoteContent}`;
+
+            case NodeType.Code:
+                return `\`${content}\``;
+
+            case NodeType.CodeBlock:
+                let subCodeBlockContent = '';
+                const subCodeBlockNodes = node?.children || [];
+                for (const subNode of subCodeBlockNodes) {
+                    subCodeBlockContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
+                }
+
+                return `    ${subCodeBlockContent}`;
+
+            case NodeType.List:
                 const listType = options.list;
                 const indentCount = options.indent ? options.indent : 0;
 
@@ -163,71 +172,122 @@ class DeltaToMarkdown {
                 this._clearListSubLevels(listType, indentCount);
                 this._clearOtherListTypeAncestor(listType, indentCount);
 
-                content = this._getListFormatting(listType, indentCount, this._listLevel[listType][indentCount], content);
-            }
-        }
+                let subListContent = '';
+                const subListNodes = node?.children || [];
+                for (const subNode of subListNodes) {
+                    subListContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
+                }
 
-        content = prefix + content + postfix;
-        if (nodeTypes.length === 0) {
-            if (content === '\n') {
-                content = '\n\n';
-            }
-        }
+                return this._getListFormatting(listType, indentCount, this._listLevel[listType][indentCount], subListContent);
 
-        return content;
+            default:
+                if (content === '\n') {
+                    return '\n\n';
+                }
+
+                return content;
+        }
     }
 
     private _shouldMergeWithPrevious(node: CustomNode | null): boolean {
-        const nodeTypes = node?.type || [];
-        const toMergeTypes = [NodeType.Header, NodeType.Blockquote, NodeType.CodeBlock, NodeType.List];
-        if (toMergeTypes.some(mergeAbleType => nodeTypes.includes(mergeAbleType))) {
-            return true;
-        } else {
-            return false;
+        switch (node?.type) {
+            case NodeType.Header:
+            case NodeType.Blockquote:
+            case NodeType.CodeBlock:
+            case NodeType.List:
+                return true;
+
+            default:
+                return false;
         }
     }
 
-    private _mergeNodes(frNode: CustomNode | null, sdNode: CustomNode | null): CustomNode {
-        const textArray = frNode?.textContent.split('\n') || [];
+    private _getNodeForText(previousNode: CustomNode, content: string, types: NodeType[], options: any): CustomNode {
+        let lastNode: CustomNode | null = null;
+        if (content !== '\n') {
+            lastNode = previousNode;
+            const textArray = content.split('\n') || [];
+            for (let i = 0; i < textArray.length; i++) {
+                const text = textArray[i];
 
-        let lastNode = frNode?.previousNode;
-        for (let i = 0; i < textArray.length; i++) {
-            const text = textArray[i];
-            let innerNode: CustomNode | null = null;
+                let innerNode: CustomNode | null = null;
 
-            if (text) {
-                innerNode = new CustomNode();
-                innerNode.type = [];
-                innerNode.options = null;
-                innerNode.textContent = text;
-                innerNode.previousNode = lastNode || null;
-                lastNode ? lastNode.nextNode = innerNode : null;
-                lastNode = innerNode;
-            }
+                if (text) {
+                    innerNode = new CustomNode();
+                    innerNode.type = types[0];
+                    innerNode.options = options;
+                    innerNode.textContent = text;
+                    innerNode.previousNode = lastNode || null;
+                    lastNode ? lastNode.nextNode = innerNode : null;
+                    lastNode = innerNode;
 
-            if (i + 1 < textArray.length) {
-                innerNode = new CustomNode();
-                innerNode.type = [];
-                innerNode.options = null;
-                innerNode.textContent = '\n';
-                innerNode.previousNode = lastNode || null;
-                lastNode ? lastNode.nextNode = innerNode : null;
-                lastNode = innerNode;
+                    if (types.length > 1) {
+                        let currentNode = lastNode;
+                        for (let i = 1; i < types.length; i++) {
+                            const type = types[i];
+                            currentNode.textContent = '';
+
+                            const childNode = new CustomNode();
+                            childNode.type = type;
+                            childNode.options = options;
+                            childNode.textContent = text;
+                            currentNode.children.push(childNode);
+                            currentNode = childNode;
+                        }
+                    }
+                }
+
+                if (i + 1 < textArray.length) {
+                    innerNode = new CustomNode();
+                    innerNode.type = null;
+                    innerNode.options = null;
+                    innerNode.textContent = '\n';
+                    innerNode.previousNode = lastNode || null;
+                    lastNode ? lastNode.nextNode = innerNode : null;
+                    lastNode = innerNode;
+                }
             }
         }
 
-        if (lastNode) {
-            lastNode.type = sdNode ? sdNode.type : [];
-            lastNode.options = sdNode?.options;
+        let defaultNode = new CustomNode();
+        if (!lastNode) {
+            defaultNode.textContent = content;
+            defaultNode.options = options;
+            defaultNode.type = types[0];
+            defaultNode.previousNode = lastNode || previousNode;
+            (lastNode || previousNode).nextNode = defaultNode;
         }
 
-        const nextNode = new CustomNode();
-        nextNode.type = [];
-        nextNode.options = null;
-        nextNode.textContent = sdNode ? sdNode.textContent : '';
-        nextNode.previousNode = lastNode || null;
-        lastNode ? lastNode.nextNode = nextNode : null;
-        return nextNode;
+        return lastNode || defaultNode;
+    }
+
+    private _mergeNodes(node: CustomNode): CustomNode {
+        let previousNode = node.previousNode;
+
+        while (previousNode && (previousNode.textContent !== '' || previousNode.previousNode)) {
+            if (previousNode.textContent !== '\n') {
+                node.previousNode = previousNode.previousNode;
+                previousNode.previousNode?.nextNode ? previousNode.previousNode.nextNode = node : null;
+
+                previousNode.previousNode = null;
+                previousNode.nextNode = null;
+
+                node.children.unshift(previousNode);
+                previousNode = node.previousNode;
+            } else {
+                break;
+            }
+        }
+
+        let lastNode = node;
+        if (node.children.length > 0) {
+            lastNode = new CustomNode();
+            lastNode.textContent = '\n';
+            lastNode.previousNode = node;
+            node.nextNode = lastNode;
+        }
+
+        return lastNode;
     }
 
     private _convertToCustomNodes(ops: any): CustomNode {
@@ -236,18 +296,16 @@ class DeltaToMarkdown {
         let previousNode: CustomNode | null = firstNode;
 
         for (const deltaItem of ops) {
-            let node = new CustomNode();
-            node.textContent = deltaItem.insert;
-            node.options = deltaItem.attributes;
-            node.type = this._getNodeType(deltaItem.attributes);
+            let node = this._getNodeForText(
+                previousNode,
+                deltaItem.insert,
+                this._getNodeTypes(deltaItem.attributes),
+                deltaItem.attributes
+            );
 
             if (this._shouldMergeWithPrevious(node)) {
-                node = this._mergeNodes(previousNode, node);
-                previousNode = node.previousNode;
+                node = this._mergeNodes(node);
             }
-
-            node.previousNode = previousNode;
-            previousNode ? previousNode.nextNode = node : null;
 
             previousNode = node;
         }

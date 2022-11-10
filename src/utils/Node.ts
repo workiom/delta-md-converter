@@ -11,11 +11,12 @@ export enum NodeType {
 }
 
 export class CustomNode {
-    type: NodeType[] = [];
+    type: NodeType | null = null;
     textContent: string = '';
     previousNode: CustomNode | null = null;
     nextNode: CustomNode | null = null;
     options: any;
+    children: CustomNode[] = [];
 
     constructor() { }
 }
