@@ -398,6 +398,8 @@ class MarkdownToDelta {
                 continue;
             }
 
+            opItem.insert = opItem.insert.replace(/\n\n/gi, '\n');
+
             if (opItem.insert === '\n\n') {
                 opItem.insert = '\n';
             }
@@ -407,7 +409,10 @@ class MarkdownToDelta {
 
         if (ops.length > 0) {
             const lastOps = ops[ops.length - 1];
-            if (lastOps.insert !== '\n' || lastOps.attributes) {
+            const endsWithLine = lastOps.insert.endsWith('\n') && !lastOps.attributes;
+            const noNewLine = lastOps.insert !== '\n' || lastOps.attributes;
+
+            if (!endsWithLine && noNewLine) {
                 ops.push({
                     "insert": '\n'
                 });
@@ -417,8 +422,13 @@ class MarkdownToDelta {
         return ops;
     }
 
+    private _processedMarkedDown(md: string): string {
+        return md
+    }
+
     convert(md: string): any {
-        const customNode = this._convertToCustomNodes(md + '\n');
+        const processedMd = this._processedMarkedDown(md);
+        const customNode = this._convertToCustomNodes(processedMd + '\n');
         const convertedOps = this._convertCustomNodesToDelta(customNode);
         const ops = this._normalizeDelta(convertedOps);
 

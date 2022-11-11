@@ -479,6 +479,26 @@ describe('Delta to Markdown', () => {
 
         expect(md).toBe("* **Bold** **_Bold & Italic_**");
     });
+
+    test('Empty Lines', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            {
+                "insert": "Line 1\n\n\nLine 2\n"
+            }
+        ]);
+
+        expect(md).toBe("Line 1\n\n\n\n\n\nLine 2");
+    });
+
+    test('Tabs', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            {
+                "insert": '\t\tWith tabs\n'
+            }
+        ]);
+
+        expect(md).toBe("\t\tWith tabs");
+    });
 });
 
 describe('Markdown to Delta', () => {
@@ -978,6 +998,26 @@ describe('Markdown to Delta', () => {
             },
             {
                 "insert": "\n"
+            }
+        ]);
+    });
+
+    test('Empty Lines', () => {
+        const ops = deltaToMdConverter.markdownToDelta("Line 1\n\n\n\n\n\nLine 2");
+
+        expect(ops).toStrictEqual([
+            {
+                "insert": "Line 1\n\n\nLine 2\n"
+            }
+        ]);
+    });
+
+    test('Tabs', () => {
+        const ops = deltaToMdConverter.markdownToDelta("\t\tWith tabs");
+
+        expect(ops).toStrictEqual([
+            {
+                "insert": '\t\tWith tabs\n'
             }
         ]);
     });

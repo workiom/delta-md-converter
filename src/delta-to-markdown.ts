@@ -339,7 +339,7 @@ class DeltaToMarkdown {
             node = node.nextNode;
         }
 
-        return md.trim();
+        return md.replace(/[\s\n]*$/gi, '');
     }
 
     convert(ops: any): string {
