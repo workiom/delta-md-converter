@@ -78,6 +78,25 @@ describe('Delta to Markdown', () => {
         expect(md).toBe("Head 1\n======\n\nHead 2\n------\n\n### Head 3");
     });
 
+    test('Text after header', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            {
+                "insert": "Head 1"
+            },
+            {
+                "attributes": {
+                    "header": 1
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "Normal text"
+            }
+        ]);
+
+        expect(md).toBe("Head 1\n======\n\nNormal text");
+    });
+
     test('Quote, Code And Code block', () => {
         const md = deltaToMdConverter.deltaToMarkdown([
             {
@@ -578,6 +597,25 @@ describe('Markdown to Delta', () => {
             },
             {
                 "insert": "\n"
+            }
+        ]);
+    });
+
+    test('Text after header', () => {
+        const ops = deltaToMdConverter.markdownToDelta("Head 1\n======\n\nNormal text");
+
+        expect(ops).toStrictEqual([
+            {
+                "insert": "Head 1"
+            },
+            {
+                "attributes": {
+                    "header": 1
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "Normal text\n"
             }
         ]);
     });

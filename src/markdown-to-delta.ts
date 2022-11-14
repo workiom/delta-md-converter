@@ -40,11 +40,11 @@ class MarkdownToDelta {
             return { type: NodeType.Link, text: tag, value: {text: linkLabel, options: {link: linkUrl}} };
         });
         // Header 1
-        parser.addRule(/(.*)\n=+\n/gi, (tag, cleanTag): any => {
+        parser.addRule(/(.*)\n=+\n[\n$]/gi, (tag, cleanTag): any => {
             return { type: NodeType.Header, text: tag, value: {text: cleanTag, options: {header: 1}} };
         });
         // Header 2
-        parser.addRule(/(.*)\n-+\n/gi, (tag, cleanTag): any => {
+        parser.addRule(/(.*)\n-+\n[\n$]/gi, (tag, cleanTag): any => {
             return { type: NodeType.Header, text: tag, value: {text: cleanTag, options: {header: 2}} };
         });
         // Header 3
