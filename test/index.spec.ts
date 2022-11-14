@@ -1,8 +1,8 @@
-import { deltaToMarkdown, markdownToDelta } from '../src/index'
+import deltaToMdConverter from '../src/index'
 
 describe('Delta to Markdown', () => {
     test('Bold, Italic, Strike and Link', () => {
-        const md = deltaToMarkdown([
+        const md = deltaToMdConverter.deltaToMarkdown([
             {
                 "attributes": {
                     "bold": true
@@ -45,7 +45,7 @@ describe('Delta to Markdown', () => {
     });
 
     test('Heading', () => {
-        const md = deltaToMarkdown([
+        const md = deltaToMdConverter.deltaToMarkdown([
             {
                 "insert": "Head 1"
             },
@@ -79,7 +79,7 @@ describe('Delta to Markdown', () => {
     });
 
     test('Quote, Code And Code block', () => {
-        const md = deltaToMarkdown([
+        const md = deltaToMdConverter.deltaToMarkdown([
             {
                 "insert": "Quote"
             },
@@ -110,7 +110,7 @@ describe('Delta to Markdown', () => {
     });
 
     test('Bullet List', () => {
-        const md = deltaToMarkdown([
+        const md = deltaToMdConverter.deltaToMarkdown([
             {
                 "insert": "Level 1"
             },
@@ -203,7 +203,7 @@ describe('Delta to Markdown', () => {
     });
 
     test('Ordered List', () => {
-        const md = deltaToMarkdown([
+        const md = deltaToMdConverter.deltaToMarkdown([
             {
                 "insert": "Level 1"
             },
@@ -296,7 +296,7 @@ describe('Delta to Markdown', () => {
     });
 
     test('Ordered And Bullet List', () => {
-        const md = deltaToMarkdown([
+        const md = deltaToMdConverter.deltaToMarkdown([
             {
                 "insert": "Ordered 1"
             },
@@ -353,7 +353,7 @@ describe('Delta to Markdown', () => {
     });
 
     test('Code Block After List', () => {
-        const md = deltaToMarkdown([
+        const md = deltaToMdConverter.deltaToMarkdown([
             {
                 "insert": "Ordered 1"
             },
@@ -390,7 +390,7 @@ describe('Delta to Markdown', () => {
     });
 
     test('Combine Bold And Italic', () => {
-        const md = deltaToMarkdown([
+        const md = deltaToMdConverter.deltaToMarkdown([
             {
                 "attributes": {
                     "bold": true
@@ -416,7 +416,7 @@ describe('Delta to Markdown', () => {
     });
 
     test('Combine Italic And Strike', () => {
-        const md = deltaToMarkdown([
+        const md = deltaToMdConverter.deltaToMarkdown([
             {
                 "attributes": {
                     "strike": true,
@@ -433,7 +433,7 @@ describe('Delta to Markdown', () => {
     });
 
     test('Bold Inside List', () => {
-        const md = deltaToMarkdown([
+        const md = deltaToMdConverter.deltaToMarkdown([
             {
                 "attributes": {
                     "bold": true
@@ -452,7 +452,7 @@ describe('Delta to Markdown', () => {
     });
 
     test('Bold & Italic Inside List', () => {
-        const md = deltaToMarkdown([
+        const md = deltaToMdConverter.deltaToMarkdown([
             {
                 "attributes": {
                     "bold": true
@@ -481,7 +481,7 @@ describe('Delta to Markdown', () => {
     });
 
     test('Empty Lines', () => {
-        const md = deltaToMarkdown([
+        const md = deltaToMdConverter.deltaToMarkdown([
             {
                 "insert": "Line 1\n\n\nLine 2\n"
             }
@@ -491,7 +491,7 @@ describe('Delta to Markdown', () => {
     });
 
     test('Tabs', () => {
-        const md = deltaToMarkdown([
+        const md = deltaToMdConverter.deltaToMarkdown([
             {
                 "insert": '\t\tWith tabs\n'
             }
@@ -503,7 +503,7 @@ describe('Delta to Markdown', () => {
 
 describe('Markdown to Delta', () => {
     test('Bold, Italic, Strike and Link', () => {
-        const ops = markdownToDelta("**Bold** _Italic_ ~~Strike~~ [Link](http://link.com)");
+        const ops = deltaToMdConverter.markdownToDelta("**Bold** _Italic_ ~~Strike~~ [Link](http://link.com)");
 
         expect(ops).toStrictEqual([
             {
@@ -546,7 +546,7 @@ describe('Markdown to Delta', () => {
     });
 
     test('Heading', () => {
-        const ops = markdownToDelta("Head 1\n======\n\nHead 2\n------\n\n### Head 3");
+        const ops = deltaToMdConverter.markdownToDelta("Head 1\n======\n\nHead 2\n------\n\n### Head 3");
 
         expect(ops).toStrictEqual([
             {
@@ -583,7 +583,7 @@ describe('Markdown to Delta', () => {
     });
 
     test('Quote, Code And Code block', () => {
-        const ops = markdownToDelta("> Quote\n\n`Code`\n\n    Code Block");
+        const ops = deltaToMdConverter.markdownToDelta("> Quote\n\n`Code`\n\n    Code Block");
 
         expect(ops).toStrictEqual([
             {
@@ -620,7 +620,7 @@ describe('Markdown to Delta', () => {
     });
 
     test('Bullet List', () => {
-        const ops = markdownToDelta("* Level 1\n\n    * Level 1 - 1\n\n        * Level 1 - 1 - 1\n\n        * Level 1 - 1 - 2\n\n    * Level 1 - 2\n\n* Level 2\n\n    * Level 2 - 1\n\n* Level 3\n\n* Level 4");
+        const ops = deltaToMdConverter.markdownToDelta("* Level 1\n\n    * Level 1 - 1\n\n        * Level 1 - 1 - 1\n\n        * Level 1 - 1 - 2\n\n    * Level 1 - 2\n\n* Level 2\n\n    * Level 2 - 1\n\n* Level 3\n\n* Level 4");
 
         expect(ops).toStrictEqual([
             {
@@ -716,7 +716,7 @@ describe('Markdown to Delta', () => {
     });
 
     test('Ordered List', () => {
-        const ops = markdownToDelta("1. Level 1\n\n    1. Level 1 - 1\n\n        1. Level 1 - 1 - 1\n\n        2. Level 1 - 1 - 2\n\n    2. Level 1 - 2\n\n2. Level 2\n\n    1. Level 2 - 1\n\n3. Level 3\n\n4. Level 4");
+        const ops = deltaToMdConverter.markdownToDelta("1. Level 1\n\n    1. Level 1 - 1\n\n        1. Level 1 - 1 - 1\n\n        2. Level 1 - 1 - 2\n\n    2. Level 1 - 2\n\n2. Level 2\n\n    1. Level 2 - 1\n\n3. Level 3\n\n4. Level 4");
 
         expect(ops).toStrictEqual([
             {
@@ -812,7 +812,7 @@ describe('Markdown to Delta', () => {
     });
 
     test('Ordered And Bullet List', () => {
-        const ops = markdownToDelta("1. Ordered 1\n\n    * Bullet 1\n\n    * Bullet 2\n\n1. Ordered 1\n\n2. Ordered 2");
+        const ops = deltaToMdConverter.markdownToDelta("1. Ordered 1\n\n    * Bullet 1\n\n    * Bullet 2\n\n1. Ordered 1\n\n2. Ordered 2");
 
         expect(ops).toStrictEqual([
             {
@@ -869,7 +869,7 @@ describe('Markdown to Delta', () => {
     });
 
     test('Code Block After List', () => {
-        const ops = markdownToDelta("1. Ordered 1\n\n2. Ordered 2\n\n    Code Block");
+        const ops = deltaToMdConverter.markdownToDelta("1. Ordered 1\n\n2. Ordered 2\n\n    Code Block");
 
         expect(ops).toStrictEqual([
             {
@@ -906,7 +906,7 @@ describe('Markdown to Delta', () => {
     });
 
     test('Combine Bold And Italic', () => {
-        const ops = markdownToDelta("**Bold** **_Bold & Italic_**");
+        const ops = deltaToMdConverter.markdownToDelta("**Bold** **_Bold & Italic_**");
 
         expect(ops).toStrictEqual([
             {
@@ -933,7 +933,7 @@ describe('Markdown to Delta', () => {
 
     test('Combine Italic And Strike', () => {
 
-        const ops = markdownToDelta("_~~Italic And Strike~~_");
+        const ops = deltaToMdConverter.markdownToDelta("_~~Italic And Strike~~_");
 
         expect(ops).toStrictEqual([
             {
@@ -950,7 +950,7 @@ describe('Markdown to Delta', () => {
     });
 
     test('Bold Inside List', () => {
-        const ops = markdownToDelta("* **Bold**");
+        const ops = deltaToMdConverter.markdownToDelta("* **Bold**");
 
         expect(ops).toStrictEqual([
             {
@@ -971,7 +971,7 @@ describe('Markdown to Delta', () => {
     });
 
     test('Bold & Italic Inside List', () => {
-        const ops = markdownToDelta("* **Bold** **_Bold & Italic_**");
+        const ops = deltaToMdConverter.markdownToDelta("* **Bold** **_Bold & Italic_**");
 
         expect(ops).toStrictEqual([
             {
@@ -1003,7 +1003,7 @@ describe('Markdown to Delta', () => {
     });
 
     test('Empty Lines', () => {
-        const ops = markdownToDelta("Line 1\n\n\n\n\n\nLine 2");
+        const ops = deltaToMdConverter.markdownToDelta("Line 1\n\n\n\n\n\nLine 2");
 
         expect(ops).toStrictEqual([
             {
@@ -1013,7 +1013,7 @@ describe('Markdown to Delta', () => {
     });
 
     test('Tabs', () => {
-        const ops = markdownToDelta("\t\tWith tabs");
+        const ops = deltaToMdConverter.markdownToDelta("\t\tWith tabs");
 
         expect(ops).toStrictEqual([
             {
