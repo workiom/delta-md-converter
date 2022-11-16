@@ -97,6 +97,25 @@ describe('Delta to Markdown', () => {
         expect(md).toBe("Head 1\n======\n\nNormal text");
     });
 
+    test('Text after list', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            {
+                "insert": "List 1"
+            },
+            {
+                "attributes": {
+                    "list": 'bullet'
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "Normal text\n"
+            }
+        ]);
+
+        expect(md).toBe("* List 1\n\nNormal text");
+    });
+
     test('Quote, Code And Code block', () => {
         const md = deltaToMdConverter.deltaToMarkdown([
             {
@@ -611,6 +630,25 @@ describe('Markdown to Delta', () => {
             {
                 "attributes": {
                     "header": 1
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "Normal text\n"
+            }
+        ]);
+    });
+
+    test('Text after list', () => {
+        const ops = deltaToMdConverter.markdownToDelta("* List 1\n\nNormal text");
+
+        expect(ops).toStrictEqual([
+            {
+                "insert": "List 1"
+            },
+            {
+                "attributes": {
+                    "list": 'bullet'
                 },
                 "insert": "\n"
             },

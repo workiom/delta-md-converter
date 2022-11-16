@@ -382,10 +382,12 @@ class MarkdownToDelta {
         const ops: any = [];
 
         for (const opItem of convertedOps) {
+            // Skip Empty text
             if (opItem.insert === '') {
                 continue;
             }
 
+            // Skip New line after block
             const lastOps = ops[ops.length - 1];
             const lastOpsWithoutNewLine = lastOps && lastOps.attributes && (
                 lastOps.attributes['header'] ||
@@ -398,10 +400,12 @@ class MarkdownToDelta {
                 continue;
             }
 
+            // Change double lines in any text
             opItem.insert = opItem.insert.replace(/\n\n/gi, '\n');
 
-            if (opItem.insert === '\n\n') {
-                opItem.insert = '\n';
+            // Skip new line after list
+            if (opItem.insert.startsWith('\n') && opItem.insert.length > 1 && lastOps && lastOps.attributes.list) {
+                opItem.insert = opItem.insert.substring(1, opItem.insert.length);
             }
 
             ops.push(opItem);
@@ -422,13 +426,8 @@ class MarkdownToDelta {
         return ops;
     }
 
-    private _processedMarkedDown(md: string): string {
-        return md
-    }
-
     convert(md: string): any {
-        const processedMd = this._processedMarkedDown(md);
-        const customNode = this._convertToCustomNodes(processedMd + '\n');
+        const customNode = this._convertToCustomNodes(md + '\n');
         const convertedOps = this._convertCustomNodesToDelta(customNode);
         const ops = this._normalizeDelta(convertedOps);
 
