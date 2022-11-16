@@ -171,7 +171,10 @@ class DeltaToMarkdown {
                     subCodeBlockContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
                 }
 
-                return `    ${subCodeBlockContent}`;
+                const lineCounts = content.split('\n').length - 2;
+                const postfix = Array(lineCounts + 1).join('\n');
+
+                return `    ${subCodeBlockContent}${postfix}`;
 
             case NodeType.List:
                 const listType = options.list;
@@ -224,7 +227,12 @@ class DeltaToMarkdown {
         let lastNode: CustomNode | null = null;
         if (content !== '\n') {
             lastNode = previousNode;
-            const textArray = content.split('\n') || [];
+            let textArray = content.split('\n') || [];
+            const allLines = textArray.every(text => text.length === 0);
+            if (allLines) {
+                textArray = [content];
+            }
+
             for (let i = 0; i < textArray.length; i++) {
                 const text = textArray[i];
 

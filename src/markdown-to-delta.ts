@@ -381,7 +381,9 @@ class MarkdownToDelta {
     private _normalizeDelta(convertedOps: any): any {
         const ops: any = [];
 
-        for (const opItem of convertedOps) {
+        for (let i = 0; i < convertedOps.length; i++) {
+            const opItem = convertedOps[i];
+
             // Skip Empty text
             if (opItem.insert === '') {
                 continue;
@@ -398,6 +400,15 @@ class MarkdownToDelta {
 
             if (lastOpsWithoutNewLine && opItem.insert === '\n' && !opItem.attributes) {
                 continue;
+            }
+
+            if (opItem.insert === '\n\n' && !opItem.attributes) {
+                const prevOps = convertedOps[i - 1];
+                const nextOps = convertedOps[i + 2];
+                if (prevOps && nextOps && JSON.stringify(prevOps.attributes) === JSON.stringify(nextOps.attributes)) {
+                    prevOps.insert = '\n\n';
+                    continue;
+                }
             }
 
             // Change double lines in any text

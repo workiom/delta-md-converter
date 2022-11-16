@@ -537,6 +537,56 @@ describe('Delta to Markdown', () => {
 
         expect(md).toBe("\t\tWith tabs");
     });
+
+    test('Multiline Code Block', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            {
+                "insert": "Code block 1"
+            },
+            {
+                "attributes": {
+                    "code-block": true
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "Code block 2"
+            },
+            {
+                "attributes": {
+                    "code-block": true
+                },
+                "insert": "\n"
+            }
+        ]);
+
+        expect(md).toBe("    Code block 1\n\n    Code block 2");
+    });
+
+    test('Multiline Inside Code Block', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            {
+                "insert": "Code block 1"
+            },
+            {
+                "attributes": {
+                    "code-block": true
+                },
+                "insert": "\n\n"
+            },
+            {
+                "insert": "Code block 2"
+            },
+            {
+                "attributes": {
+                    "code-block": true
+                },
+                "insert": "\n"
+            }
+        ]);
+
+        expect(md).toBe("    Code block 1\n\n\n    Code block 2");
+    });
 });
 
 describe('Markdown to Delta', () => {
@@ -1094,6 +1144,62 @@ describe('Markdown to Delta', () => {
         expect(ops).toStrictEqual([
             {
                 "insert": '\t\tWith tabs\n'
+            }
+        ]);
+    });
+
+    test('Multiline Code Block', () => {
+        const ops = deltaToMdConverter.markdownToDelta("    Code block 1\n\n    Code block 2");
+
+        expect(ops).toStrictEqual([
+            {
+                "insert": "Code block 1"
+            },
+            {
+                "attributes": {
+                    "code-block": true
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "Code block 2"
+            },
+            {
+                "attributes": {
+                    "code-block": true
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+    });
+
+    test('Multiline Inside Code Block', () => {
+        const ops = deltaToMdConverter.markdownToDelta("    Code block 1\n\n\n    Code block 2");
+
+        expect(ops).toStrictEqual([
+            {
+                "insert": "Code block 1"
+            },
+            {
+                "attributes": {
+                    "code-block": true
+                },
+                "insert": "\n\n"
+            },
+            {
+                "insert": "Code block 2"
+            },
+            {
+                "attributes": {
+                    "code-block": true
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "\n"
             }
         ]);
     });
