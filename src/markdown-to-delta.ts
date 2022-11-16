@@ -15,7 +15,7 @@ class MarkdownToDelta {
             return { type: NodeType.List, text: tag, value: {text: cleanTag, options: options} };
         });
         // List Ordered
-        parser.addRule(/( *)[0-9]+\. (.*)[\n$]/gi, (tag, spaces, cleanTag): any => {
+        parser.addRule(/(^|\n)( *)[0-9]+\. (.*)[\n$]/gi, (tag, line, spaces, cleanTag): any => {
             const indent =  Math.floor(spaces.length / 4);
             const options: any = { list: 'ordered' };
             if (indent > 0) {
