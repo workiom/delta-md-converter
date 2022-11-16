@@ -48,11 +48,11 @@ class MarkdownToDelta {
             return { type: NodeType.Header, text: tag, value: {text: cleanTag, options: {header: 2}} };
         });
         // Header 3
-        parser.addRule(/\#+\s(.*)\n/gi, (tag, cleanTag): any => {
+        parser.addRule(/(^|\n)\#+\s(.*)\n/gi, (tag, lines, cleanTag): any => {
             return { type: NodeType.Header, text: tag, value: {text: cleanTag, options: {header: 3}} };
         });
         // Quote
-        parser.addRule(/\>\s(.*)\n/gi, (tag, cleanTag): any => {
+        parser.addRule(/(^|\n)\>\s(.*)\n/gi, (tag, lines, cleanTag): any => {
             return { type: NodeType.Blockquote, text: tag, value: {text: cleanTag} };
         });
         // Code
@@ -60,7 +60,7 @@ class MarkdownToDelta {
             return { type: NodeType.Code, text: tag, value: {text: cleanTag} };
         });
         // Block Code
-        parser.addRule(/    (.*)/gi, (tag, cleanTag): any => {
+        parser.addRule(/(^|\n)    (.*)/gi, (tag, lines, cleanTag): any => {
             return { type: NodeType.CodeBlock, text: tag, value: {text: cleanTag} };
         });
 
