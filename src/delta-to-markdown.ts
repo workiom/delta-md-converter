@@ -162,7 +162,10 @@ class DeltaToMarkdown {
                     subBlockQuoteContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
                 }
 
-                return `> ${subBlockQuoteContent}`;
+                const blockquoteLineCounts = content.split('\n').length - 2;
+                const blockquotePostfix = Array(blockquoteLineCounts + 1).join('\n');
+
+                return `> ${subBlockQuoteContent}${blockquotePostfix}`;
 
             case NodeType.CodeBlock:
                 let subCodeBlockContent = '';
@@ -171,10 +174,10 @@ class DeltaToMarkdown {
                     subCodeBlockContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
                 }
 
-                const lineCounts = content.split('\n').length - 2;
-                const postfix = Array(lineCounts + 1).join('\n');
+                const codeBlockLineCounts = content.split('\n').length - 2;
+                const codeBlockPostfix = Array(codeBlockLineCounts + 1).join('\n');
 
-                return `    ${subCodeBlockContent}${postfix}`;
+                return `    ${subCodeBlockContent}${codeBlockPostfix}`;
 
             case NodeType.List:
                 const listType = options.list;

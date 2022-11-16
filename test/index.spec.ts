@@ -587,6 +587,56 @@ describe('Delta to Markdown', () => {
 
         expect(md).toBe("    Code block 1\n\n\n    Code block 2");
     });
+
+    test('Multiline Blockquote', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            {
+                "insert": "Blockquote 1"
+            },
+            {
+                "attributes": {
+                    "blockquote": true
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "Blockquote 2"
+            },
+            {
+                "attributes": {
+                    "blockquote": true
+                },
+                "insert": "\n"
+            }
+        ]);
+
+        expect(md).toBe("> Blockquote 1\n\n> Blockquote 2");
+    });
+
+    test('Multiline Inside Blockquote', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            {
+                "insert": "Blockquote 1"
+            },
+            {
+                "attributes": {
+                    "blockquote": true
+                },
+                "insert": "\n\n"
+            },
+            {
+                "insert": "Blockquote 2"
+            },
+            {
+                "attributes": {
+                    "blockquote": true
+                },
+                "insert": "\n"
+            }
+        ]);
+
+        expect(md).toBe("> Blockquote 1\n\n\n> Blockquote 2");
+    });
 });
 
 describe('Markdown to Delta', () => {
@@ -1195,6 +1245,62 @@ describe('Markdown to Delta', () => {
             {
                 "attributes": {
                     "code-block": true
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+    });
+
+    test('Multiline Blockquote', () => {
+        const ops = deltaToMdConverter.markdownToDelta("> Blockquote 1\n\n> Blockquote 2");
+
+        expect(ops).toStrictEqual([
+            {
+                "insert": "Blockquote 1"
+            },
+            {
+                "attributes": {
+                    "blockquote": true
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "Blockquote 2"
+            },
+            {
+                "attributes": {
+                    "blockquote": true
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+    });
+
+    test('Multiline Inside Blockquote', () => {
+        const ops = deltaToMdConverter.markdownToDelta("> Blockquote 1\n\n\n> Blockquote 2");
+
+        expect(ops).toStrictEqual([
+            {
+                "insert": "Blockquote 1"
+            },
+            {
+                "attributes": {
+                    "blockquote": true
+                },
+                "insert": "\n\n"
+            },
+            {
+                "insert": "Blockquote 2"
+            },
+            {
+                "attributes": {
+                    "blockquote": true
                 },
                 "insert": "\n"
             },
