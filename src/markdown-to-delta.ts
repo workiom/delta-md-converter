@@ -415,7 +415,7 @@ class MarkdownToDelta {
             opItem.insert = opItem.insert.replace(/\n\n/gi, '\n');
 
             // Skip new line after list
-            if (opItem.insert.startsWith('\n') && opItem.insert.length > 1 && lastOps && lastOps.attributes.list) {
+            if (opItem.insert.startsWith('\n') && opItem.insert.length > 1 && lastOps?.attributes?.list) {
                 opItem.insert = opItem.insert.substring(1, opItem.insert.length);
             }
 

@@ -637,6 +637,33 @@ describe('Delta to Markdown', () => {
 
         expect(md).toBe("> Blockquote 1\n\n\n> Blockquote 2");
     });
+
+    // Customer case
+    test('Multiline Inside Blockquote', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            {
+                insert: "Google",
+                attributes: {
+                    link: "https://google.com",
+                },
+            },
+            {
+                insert: " ,",
+            },
+            {
+                insert: "\nGoogle 2 ,",
+                attributes: {
+                    italic: true,
+                    link: "https://google.com",
+                },
+            },
+            {
+                insert: "\n_[Google 3]https://google.com)\n",
+            },
+        ]);
+
+        expect(md).toBe("[Google](https://google.com) ,\n\n_[Google 2 ,](https://google.com)_\n\n_[Google 3]https://google.com)");
+    });
 });
 
 describe('Markdown to Delta', () => {
@@ -1307,6 +1334,61 @@ describe('Markdown to Delta', () => {
             {
                 "insert": "\n"
             }
+        ]);
+    });
+
+    test('Multiline Inside Blockquote', () => {
+        const ops = deltaToMdConverter.markdownToDelta("> Blockquote 1\n\n\n> Blockquote 2");
+
+        expect(ops).toStrictEqual([
+            {
+                "insert": "Blockquote 1"
+            },
+            {
+                "attributes": {
+                    "blockquote": true
+                },
+                "insert": "\n\n"
+            },
+            {
+                "insert": "Blockquote 2"
+            },
+            {
+                "attributes": {
+                    "blockquote": true
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+    });
+
+    // Customer case
+    test('Invalid links styles', () => {
+        const ops = deltaToMdConverter.markdownToDelta("[Google](https://google.com) ,_\n\n[Google 2](https://google.com) ,_\n\n_[Google 3]https://google.com)");
+
+        expect(ops).toStrictEqual([
+            {
+                insert: "Google",
+                attributes: {
+                    link: "https://google.com",
+                },
+            },
+            {
+                insert: " ,",
+            },
+            {
+                insert: "\nGoogle 2 ,",
+                attributes: {
+                    italic: true,
+                    link: "https://google.com",
+                },
+            },
+            {
+                insert: "\n_[Google 3]https://google.com)\n",
+            },
         ]);
     });
 });
