@@ -638,6 +638,42 @@ describe('Delta to Markdown', () => {
         expect(md).toBe("> Blockquote 1\n\n\n> Blockquote 2");
     });
 
+    // Mentions
+    test('Mention User', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            {
+                "insert": {
+                    "mention": {
+                        "index": "0",
+                        "denotationChar": "@",
+                        "value": "User Name",
+                        "id": "1234"
+                    }
+                },
+            }, {
+                "insert": " ",
+            }, {
+                "insert": {
+                    "field": {
+                        "type": 0,
+                        "id": "123456_A_00000000z0000z0000z0000z000000000000",
+                        "value": "Some Field"
+                    }
+                }
+            }, {
+                "insert": " ",
+            }, {
+                "insert": {
+                    "field": {
+                        "value": "Some Field"
+                    }
+                }
+            }
+        ]);
+
+        expect(md).toBe("_U_1234 _F_123456_A_00000000z0000z0000z0000z000000000000");
+    });
+
     // Customer case
     test('Multiline Inside Blockquote', () => {
         const md = deltaToMdConverter.deltaToMarkdown([

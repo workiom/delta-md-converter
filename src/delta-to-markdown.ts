@@ -226,14 +226,33 @@ class DeltaToMarkdown {
         }
     }
 
-    private _getNodeForText(previousNode: CustomNode, content: string, types: NodeType[], options: any): CustomNode {
+    private _getContentText(content: any): string {
+        if (typeof content === 'string') {
+            return content;
+        } else {
+            if (content.mention) {
+                return '_U_' + content.mention.id;
+            } else if (content.field) {
+                if (content.field.id) {
+                    return '_F_' + content.field.id;
+                } else {
+                    return content.field.value;
+                }
+            } else {
+                return '';
+            }
+        }
+    }
+
+    private _getNodeForText(previousNode: CustomNode, content: any, types: NodeType[], options: any): CustomNode {
         let lastNode: CustomNode | null = null;
         if (content !== '\n') {
             lastNode = previousNode;
-            let textArray = content.split('\n') || [];
+            const contentText = this._getContentText(content);
+            let textArray = contentText.split('\n') || [];
             const allLines = textArray.every(text => text.length === 0);
             if (allLines) {
-                textArray = [content];
+                textArray = [contentText];
             }
 
             for (let i = 0; i < textArray.length; i++) {
