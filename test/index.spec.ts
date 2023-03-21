@@ -671,7 +671,39 @@ describe('Delta to Markdown', () => {
             }
         ]);
 
-        expect(md).toBe("_U_1234 _F_123456_A_00000000z0000z0000z0000z000000000000");
+        expect(md).toBe("_U_1234 _F_123456_A_00000000z0000z0000z0000z000000000000 Some Field");
+    });
+
+    // Mentions
+    test('Mentioning two users', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            {
+                "insert": {
+                    "mention": {
+                        "index": "0",
+                        "denotationChar": "@",
+                        "value": "User 1",
+                        "id": "5555"
+                    }
+                },
+            }, {
+                "insert": " Please ask "
+            },
+            {
+                "insert": {
+                    "mention": {
+                        "index": "0",
+                        "denotationChar": "@",
+                        "value": "User 2",
+                        "id": "4444"
+                    }
+                },
+            }, {
+                "insert": " to give you the docs",
+            }
+        ]);
+
+        expect(md).toBe("_U_5555 Please ask _U_4444 to give you the docs");
     });
 
     // Customer case
