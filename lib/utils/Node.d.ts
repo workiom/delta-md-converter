@@ -7,7 +7,8 @@ export declare enum NodeType {
     Blockquote = 5,
     Code = 6,
     CodeBlock = 7,
-    List = 8
+    List = 8,
+    Mention = 9
 }
 export declare class CustomNode {
     type: NodeType | null;
