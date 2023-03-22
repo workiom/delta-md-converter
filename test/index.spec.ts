@@ -1,4 +1,6 @@
+import { IDeltaMention } from '../src/delta-to-markdown';
 import deltaToMdConverter from '../src/index'
+import { IStringMention } from '../src/markdown-to-delta';
 
 describe('Delta to Markdown', () => {
     test('Bold, Italic, Strike and Link', () => {
@@ -638,8 +640,19 @@ describe('Delta to Markdown', () => {
         expect(md).toBe("> Blockquote 1\n\n\n> Blockquote 2");
     });
 
-    // Mentions
-    test('Mention User', () => {
+    // Mentions And Fields
+    test('Mention and Fields User', () => {
+        const mentions: IDeltaMention[] = [{
+            key: 'mention',
+            prefix: '_U_',
+            postfix: '',
+            valueKey: 'id',
+        }, {
+            key: 'field',
+            prefix: '_F_',
+            postfix: '',
+            valueKey: 'id',
+        }];
         const md = deltaToMdConverter.deltaToMarkdown([
             {
                 "insert": {
@@ -663,19 +676,21 @@ describe('Delta to Markdown', () => {
             }, {
                 "insert": " ",
             }, {
-                "insert": {
-                    "field": {
-                        "value": "Some Field"
-                    }
-                }
+                "insert": "Some Field"
             }
-        ]);
+        ], mentions);
 
         expect(md).toBe("_U_1234 _F_123456_A_00000000z0000z0000z0000z000000000000 Some Field");
     });
 
     // Mentions
     test('Mentioning two users', () => {
+        const mentions: IDeltaMention[] = [{
+            key: 'mention',
+            prefix: '_U_',
+            postfix: '',
+            valueKey: 'id',
+        }];
         const md = deltaToMdConverter.deltaToMarkdown([
             {
                 "insert": {
@@ -701,7 +716,7 @@ describe('Delta to Markdown', () => {
             }, {
                 "insert": " to give you the docs",
             }
-        ]);
+        ], mentions);
 
         expect(md).toBe("_U_5555 Please ask _U_4444 to give you the docs");
     });
@@ -1430,6 +1445,39 @@ describe('Markdown to Delta', () => {
             {
                 "insert": "\n"
             }
+        ]);
+    });
+
+    // Mentions
+    test('Mention User', () => {
+        const mentions: IStringMention[] = [{
+            type: 'mention',
+            reg: /_U_([0-9]+)[\s$]/gi,
+            denotationChar: '@',
+            values: [{
+                label: 'User Name',
+                value: '1234'
+            }, {
+                label: 'User 2',
+                value: '5678'
+            }]
+        }];
+        const ops = deltaToMdConverter.markdownToDelta("_U_1234 Some Field", mentions);
+
+        expect(ops).toStrictEqual([
+            {
+                "insert": {
+                    "mention": {
+                        "index": "0",
+                        "denotationChar": "@",
+                        "value": "User Name",
+                        "id": "1234"
+                    }
+                },
+            },
+            {
+                insert: "Some Field\n",
+            },
         ]);
     });
 

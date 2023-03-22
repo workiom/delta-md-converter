@@ -1,10 +1,27 @@
 import { CustomNode, NodeType } from "./utils/Node";
 import { Parser } from 'simple-text-parser';
 
+export interface IStringMention {
+    type: string;
+    reg: RegExp;
+    denotationChar: string;
+    values: { label: string; value: string; }[];
+}
+
 class MarkdownToDelta {
+
+    constructor(public mentions?: IStringMention[]) { }
 
     private _parseText(text: string): any {
         const parser = new Parser();
+
+        if (this.mentions && this.mentions.length > 0) {
+            for (const mention of this.mentions) {
+                parser.addRule(mention.reg, (tag, ...args): any => {
+                    return { type: NodeType.Mention, text: tag, value: { type: mention.type, args: args } };
+                });
+            }
+        }
         // List Bullet
         parser.addRule(/(^|\n)( *)\*(?!\*) (.*)[\n$]/gi, (tag, line, spaces, cleanTag): any => {
             const indent = Math.floor(spaces.length / 4);
@@ -122,6 +139,32 @@ class MarkdownToDelta {
                     lastNode.nextNode = node;
                     lastNode = node;
                 }
+            } else if (treeItem.type === NodeType.Mention) {
+                const node = new CustomNode();
+                node.type = NodeType.Mention;
+                const mention = this.mentions?.find(m => m.type === treeItem.value.type);
+                const mValue = mention?.values.find(mv => mv.value.toString() === treeItem.value.args[0].toString());
+                if (mention && mValue) {
+                    node.options = {
+                        "index": "0",
+                        "denotationChar": mention.denotationChar,
+                        "value": mValue.label,
+                        "id": mValue.value,
+                        "type": treeItem.value.type,
+                    };
+                } else {
+                    node.options = {
+                        "index": "0",
+                        "denotationChar": mention?.denotationChar,
+                        "value": '',
+                        "id": treeItem.value.userId,
+                        "type": 'mention',
+                    };
+                }
+
+                node.previousNode = lastNode;
+                lastNode.nextNode = node;
+                lastNode = node;
             } else if (treeItem.subTree.length > 0) {
                 const node = new CustomNode();
                 node.type = null;
@@ -356,6 +399,15 @@ class MarkdownToDelta {
 
                         ops.push(opsItem);
                     }
+                } else if (lastNode.type === NodeType.Mention) {
+                    const options = lastNode.options;
+                    const type = options.type;
+                    delete options.type;
+                    const insertObj = { [type]: options };
+
+                    ops.push({
+                        insert: insertObj
+                    });
                 } else {
                     const attributes = this._getAttributesFromNodeType(lastNode);
                     const text = this._getTextsFromNodeType(lastNode);
@@ -387,6 +439,21 @@ class MarkdownToDelta {
             // Skip Empty text
             if (opItem.insert === '') {
                 continue;
+            }
+
+            if (this.mentions && this.mentions.length > 0) {
+                let mentionFound = false;
+                for (const mention of this.mentions) {
+                    if (opItem.insert[mention.type]) {
+                        mentionFound = true;
+                        ops.push(opItem);
+                        break;
+                    }
+                }
+
+                if (mentionFound) {
+                    continue;
+                }
             }
 
             // Skip New line after block
@@ -446,7 +513,7 @@ class MarkdownToDelta {
     }
 }
 
-export const markdownToDelta = (md: string) => {
-    const mtd = new MarkdownToDelta();
+export const markdownToDelta = (md: string, mentions?: IStringMention[]) => {
+    const mtd = new MarkdownToDelta(mentions);
     return mtd.convert(md);
 };

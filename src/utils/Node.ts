@@ -8,6 +8,7 @@ export enum NodeType {
     Code,
     CodeBlock,
     List,
+    Mention,
 }
 
 export class CustomNode {

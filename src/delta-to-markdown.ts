@@ -5,6 +5,13 @@ export enum ListType {
     Ordered = 'ordered'
 }
 
+export interface IDeltaMention {
+    key: string;
+    prefix: string;
+    postfix: string;
+    valueKey: string;
+}
+
 class DeltaToMarkdown {
     private readonly _HEADER_CHARS = [
         { before: '', after: '=' },
@@ -13,6 +20,8 @@ class DeltaToMarkdown {
     ]
 
     private _listLevel: any = {};
+
+    constructor(public mentions?: IDeltaMention[]) { }
 
     private _getNodeTypes(attribute: any): NodeType[] {
         if (!attribute) {
@@ -229,19 +238,15 @@ class DeltaToMarkdown {
     private _getContentText(content: any): string {
         if (typeof content === 'string') {
             return content;
-        } else {
-            if (content.mention) {
-                return '_U_' + content.mention.id;
-            } else if (content.field) {
-                if (content.field.id) {
-                    return '_F_' + content.field.id;
-                } else {
-                    return content.field.value;
+        } else if (this.mentions && this.mentions.length > 0) {
+            for (const mention of this.mentions) {
+                if (content[mention.key]) {
+                    return mention.prefix + content[mention.key][mention.valueKey] + mention.postfix;
                 }
-            } else {
-                return '';
             }
         }
+
+        return '';
     }
 
     private _getNodeForText(previousNode: CustomNode, content: any, types: NodeType[], options: any): CustomNode {
@@ -380,7 +385,7 @@ class DeltaToMarkdown {
     }
 }
 
-export const deltaToMarkdown = (ops: any) => {
-    const dtm = new DeltaToMarkdown();
+export const deltaToMarkdown = (ops: any, mentions?: IDeltaMention[]) => {
+    const dtm = new DeltaToMarkdown(mentions);
     return dtm.convert(ops);
 };
