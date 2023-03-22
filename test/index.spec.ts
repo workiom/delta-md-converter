@@ -1462,9 +1462,12 @@ describe('Markdown to Delta', () => {
                 value: '5678'
             }]
         }];
-        const ops = deltaToMdConverter.markdownToDelta("_U_1234 Some Field", mentions);
+        const ops = deltaToMdConverter.markdownToDelta("User _U_1234 Some Value", mentions);
 
         expect(ops).toStrictEqual([
+            {
+                "insert": "User "
+            },
             {
                 "insert": {
                     "mention": {
@@ -1476,7 +1479,10 @@ describe('Markdown to Delta', () => {
                 },
             },
             {
-                insert: "Some Field\n",
+                "insert": " "
+            },
+            {
+                insert: "Some Value\n",
             },
         ]);
     });
