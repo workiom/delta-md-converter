@@ -446,7 +446,7 @@ class MarkdownToDelta {
                 for (const mention of this.mentions) {
                     if (opItem.insert[mention.type]) {
                         mentionFound = true;
-                        ops.push(opItem, { insert: ' ' });
+                        ops.push(opItem);
                         break;
                     }
                 }

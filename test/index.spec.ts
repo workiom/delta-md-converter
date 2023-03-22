@@ -1452,7 +1452,7 @@ describe('Markdown to Delta', () => {
     test('Mention User', () => {
         const mentions: IStringMention[] = [{
             type: 'mention',
-            reg: /_U_([0-9]+)[\s$]/gi,
+            reg: /_U_([0-9]+)/gi,
             denotationChar: '@',
             values: [{
                 label: 'User Name',
@@ -1479,10 +1479,7 @@ describe('Markdown to Delta', () => {
                 },
             },
             {
-                "insert": " "
-            },
-            {
-                insert: "Some Value\n",
+                insert: " Some Value\n",
             },
         ]);
     });
