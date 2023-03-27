@@ -1,6 +1,6 @@
 import { IDeltaMention } from '../src/delta-to-markdown';
-import deltaToMdConverter from '../src/index'
 import { IStringMention } from '../src/markdown-to-delta';
+import deltaToMdConverter from '../src/index'
 
 describe('Delta to Markdown', () => {
     test('Bold, Italic, Strike and Link', () => {
@@ -43,7 +43,7 @@ describe('Delta to Markdown', () => {
             }
         ]);
 
-        expect(md).toBe("**Bold** _Italic_ ~~Strike~~ [Link](http://link.com)");
+        expect(md).toEqual("**Bold** _Italic_ ~~Strike~~ [Link](http://link.com)");
     });
 
     test('Heading', () => {
@@ -77,7 +77,7 @@ describe('Delta to Markdown', () => {
             }
         ]);
 
-        expect(md).toBe("Head 1\n======\n\nHead 2\n------\n\n### Head 3");
+        expect(md).toEqual("Head 1\n======\n\nHead 2\n------\n\n### Head 3");
     });
 
     test('Text after header', () => {
@@ -96,7 +96,7 @@ describe('Delta to Markdown', () => {
             }
         ]);
 
-        expect(md).toBe("Head 1\n======\n\nNormal text");
+        expect(md).toEqual("Head 1\n======\n\nNormal text");
     });
 
     test('Text after list', () => {
@@ -115,7 +115,7 @@ describe('Delta to Markdown', () => {
             }
         ]);
 
-        expect(md).toBe("* List 1\n\nNormal text");
+        expect(md).toEqual("* List 1\n\nNormal text");
     });
 
     test('Quote, Code And Code block', () => {
@@ -146,7 +146,7 @@ describe('Delta to Markdown', () => {
             }
         ]);
 
-        expect(md).toBe("> Quote\n\n`Code`\n\n    Code Block");
+        expect(md).toEqual("> Quote\n\n`Code`\n\n    Code Block");
     });
 
     test('Bullet List', () => {
@@ -239,7 +239,7 @@ describe('Delta to Markdown', () => {
             }
         ]);
 
-        expect(md).toBe("* Level 1\n\n    * Level 1 - 1\n\n        * Level 1 - 1 - 1\n\n        * Level 1 - 1 - 2\n\n    * Level 1 - 2\n\n* Level 2\n\n    * Level 2 - 1\n\n* Level 3\n\n* Level 4");
+        expect(md).toEqual("* Level 1\n\n    * Level 1 - 1\n\n        * Level 1 - 1 - 1\n\n        * Level 1 - 1 - 2\n\n    * Level 1 - 2\n\n* Level 2\n\n    * Level 2 - 1\n\n* Level 3\n\n* Level 4");
     });
 
     test('Ordered List', () => {
@@ -332,7 +332,7 @@ describe('Delta to Markdown', () => {
             }
         ]);
 
-        expect(md).toBe("1. Level 1\n\n    1. Level 1 - 1\n\n        1. Level 1 - 1 - 1\n\n        2. Level 1 - 1 - 2\n\n    2. Level 1 - 2\n\n2. Level 2\n\n    1. Level 2 - 1\n\n3. Level 3\n\n4. Level 4");
+        expect(md).toEqual("1. Level 1\n\n    1. Level 1 - 1\n\n        1. Level 1 - 1 - 1\n\n        2. Level 1 - 1 - 2\n\n    2. Level 1 - 2\n\n2. Level 2\n\n    1. Level 2 - 1\n\n3. Level 3\n\n4. Level 4");
     });
 
     test('Ordered And Bullet List', () => {
@@ -389,7 +389,7 @@ describe('Delta to Markdown', () => {
             }
         ]);
 
-        expect(md).toBe("1. Ordered 1\n\n    * Bullet 1\n\n    * Bullet 2\n\n1. Ordered 1\n\n2. Ordered 2");
+        expect(md).toEqual("1. Ordered 1\n\n    * Bullet 1\n\n    * Bullet 2\n\n1. Ordered 1\n\n2. Ordered 2");
     });
 
     test('Code Block After List', () => {
@@ -426,7 +426,7 @@ describe('Delta to Markdown', () => {
             }
         ]);
 
-        expect(md).toBe("1. Ordered 1\n\n2. Ordered 2\n\n    Code Block");
+        expect(md).toEqual("1. Ordered 1\n\n2. Ordered 2\n\n    Code Block");
     });
 
     test('Combine Bold And Italic', () => {
@@ -452,7 +452,7 @@ describe('Delta to Markdown', () => {
             }
         ]);
 
-        expect(md).toBe("**Bold** **_Bold & Italic_**");
+        expect(md).toEqual("**Bold** **_Bold & Italic_**");
     });
 
     test('Combine Italic And Strike', () => {
@@ -469,7 +469,7 @@ describe('Delta to Markdown', () => {
             }
         ]);
 
-        expect(md).toBe("_~~Italic And Strike~~_");
+        expect(md).toEqual("_~~Italic And Strike~~_");
     });
 
     test('Bold Inside List', () => {
@@ -488,7 +488,7 @@ describe('Delta to Markdown', () => {
             }
         ]);
 
-        expect(md).toBe("* **Bold**");
+        expect(md).toEqual("* **Bold**");
     });
 
     test('Bold & Italic Inside List', () => {
@@ -517,7 +517,23 @@ describe('Delta to Markdown', () => {
             }
         ]);
 
-        expect(md).toBe("* **Bold** **_Bold & Italic_**");
+        expect(md).toEqual("* **Bold** **_Bold & Italic_**");
+    });
+
+    test('Link With Underscore', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            {
+                "attributes": {
+                    "link": "http://link_with_underscore.com"
+                },
+                "insert": "Link with underscore"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+
+        expect(md).toEqual("[Link with underscore](http://link_with_underscore.com)");
     });
 
     test('Empty Lines', () => {
@@ -527,7 +543,7 @@ describe('Delta to Markdown', () => {
             }
         ]);
 
-        expect(md).toBe("Line 1\n\n\n\n\n\nLine 2");
+        expect(md).toEqual("Line 1\n\n\n\n\n\nLine 2");
     });
 
     test('Tabs', () => {
@@ -537,7 +553,7 @@ describe('Delta to Markdown', () => {
             }
         ]);
 
-        expect(md).toBe("\t\tWith tabs");
+        expect(md).toEqual("\t\tWith tabs");
     });
 
     test('Multiline Code Block', () => {
@@ -562,7 +578,7 @@ describe('Delta to Markdown', () => {
             }
         ]);
 
-        expect(md).toBe("    Code block 1\n\n    Code block 2");
+        expect(md).toEqual("    Code block 1\n\n    Code block 2");
     });
 
     test('Multiline Inside Code Block', () => {
@@ -587,7 +603,7 @@ describe('Delta to Markdown', () => {
             }
         ]);
 
-        expect(md).toBe("    Code block 1\n\n\n    Code block 2");
+        expect(md).toEqual("    Code block 1\n\n\n    Code block 2");
     });
 
     test('Multiline Blockquote', () => {
@@ -612,7 +628,7 @@ describe('Delta to Markdown', () => {
             }
         ]);
 
-        expect(md).toBe("> Blockquote 1\n\n> Blockquote 2");
+        expect(md).toEqual("> Blockquote 1\n\n> Blockquote 2");
     });
 
     test('Multiline Inside Blockquote', () => {
@@ -637,7 +653,7 @@ describe('Delta to Markdown', () => {
             }
         ]);
 
-        expect(md).toBe("> Blockquote 1\n\n\n> Blockquote 2");
+        expect(md).toEqual("> Blockquote 1\n\n\n> Blockquote 2");
     });
 
     // Mentions And Fields
@@ -680,7 +696,7 @@ describe('Delta to Markdown', () => {
             }
         ], mentions);
 
-        expect(md).toBe("_U_1234 _F_123456_A_00000000z0000z0000z0000z000000000000 Some Field");
+        expect(md).toEqual("_U_1234 _F_123456_A_00000000z0000z0000z0000z000000000000 Some Field");
     });
 
     // Mentions
@@ -718,7 +734,7 @@ describe('Delta to Markdown', () => {
             }
         ], mentions);
 
-        expect(md).toBe("_U_5555 Please ask _U_4444 to give you the docs");
+        expect(md).toEqual("_U_5555 Please ask _U_4444 to give you the docs");
     });
 
     // Customer case
@@ -745,7 +761,7 @@ describe('Delta to Markdown', () => {
             },
         ]);
 
-        expect(md).toBe("[Google](https://google.com) ,\n\n_[Google 2 ,](https://google.com)_\n\n_[Google 3]https://google.com)");
+        expect(md).toEqual("[Google](https://google.com) ,\n\n_[Google 2 ,](https://google.com)_\n\n_[Google 3]https://google.com)");
     });
 });
 
@@ -1288,6 +1304,22 @@ describe('Markdown to Delta', () => {
         ]);
     });
 
+    test('Link With Underscore', () => {
+        const ops = deltaToMdConverter.markdownToDelta("[Link with underscore](http://link_with_underscore.com)");
+
+        expect(ops).toEqual([
+            {
+                "insert": "Link with underscore",
+                "attributes": {
+                    "link": "http://link_with_underscore.com"
+                }
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+    });
+
     test('Empty Lines', () => {
         const ops = deltaToMdConverter.markdownToDelta("Line 1\n\n\n\n\n\nLine 2");
 
@@ -1496,17 +1528,25 @@ describe('Markdown to Delta', () => {
                 },
             },
             {
-                insert: " ,",
+                insert: " ,_\n",
             },
             {
-                insert: "\nGoogle 2 ,",
+                insert: "Google 2",
                 attributes: {
-                    italic: true,
                     link: "https://google.com",
                 },
             },
             {
-                insert: "\n_[Google 3]https://google.com)\n",
+                insert: " ,",
+            },
+            {
+                insert: "\n",
+                attributes: {
+                    italic: true,
+                },
+            },
+            {
+                insert: "[Google 3]https://google.com)\n",
             },
         ]);
     });

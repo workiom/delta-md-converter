@@ -40,6 +40,10 @@ class MarkdownToDelta {
             }
             return { type: NodeType.List, text: tag, value: {text: cleanTag, options: options} };
         });
+        // Link
+        parser.addRule(/\[([^\]]*)\]\(([^\)]*)\)/gi, (tag, linkLabel, linkUrl): any => {
+            return { type: NodeType.Link, text: tag, value: {text: linkLabel, options: {link: linkUrl}} };
+        });
         // Bold
         parser.addRule(/\*\*((?:[^\*]\*?)*)\*\*/gi, (tag, cleanTag): any => {
             return { type: NodeType.Bold, text: tag, value: {text: cleanTag} };
@@ -51,10 +55,6 @@ class MarkdownToDelta {
         // Strike
         parser.addRule(/\~\~((?:[^\~]\~?)*)\~\~/gi, (tag, cleanTag): any => {
             return { type: NodeType.Strike, text: tag, value: {text: cleanTag} };
-        });
-        // Link
-        parser.addRule(/\[([^\]]*)\]\(([^\)]*)\)/gi, (tag, linkLabel, linkUrl): any => {
-            return { type: NodeType.Link, text: tag, value: {text: linkLabel, options: {link: linkUrl}} };
         });
         // Header 1
         parser.addRule(/(.*)\n=+\n[\n$]/gi, (tag, cleanTag): any => {
