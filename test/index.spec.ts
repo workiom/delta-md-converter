@@ -656,6 +656,22 @@ describe('Delta to Markdown', () => {
         expect(md).toEqual("> Blockquote 1\n\n\n> Blockquote 2");
     });
 
+    test('Complex link', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            {
+                "attributes": {
+                    "link": "http://link.com/some+(link_with_brackets)+and-continue?id=1&artical=24#Query"
+                },
+                "insert": "Complex Link"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+
+        expect(md).toEqual("[Complex Link](http://link.com/some+(link_with_brackets)+and-continue?id=1&artical=24#Query)");
+    });
+
     // Mentions And Fields
     test('Mention and Fields User', () => {
         const mentions: IDeltaMention[] = [{
@@ -1473,6 +1489,22 @@ describe('Markdown to Delta', () => {
                     "blockquote": true
                 },
                 "insert": "\n"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+    });
+
+    test('Complex link', () => {
+        const ops = deltaToMdConverter.markdownToDelta("[Complex Link](http://link.com/some+(link_with_brackets)+and-continue?id=1&artical=24#Query)");
+
+        expect(ops).toStrictEqual([
+            {
+                "attributes": {
+                    "link": "http://link.com/some+(link_with_brackets)+and-continue?id=1&artical=24#Query"
+                },
+                "insert": "Complex Link"
             },
             {
                 "insert": "\n"

@@ -1,6 +1,6 @@
 {
   "name": "delta-md-converter",
-  "version": "0.0.8",
+  "version": "0.0.81",
   "description": "Convert delta from/to markdown",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
