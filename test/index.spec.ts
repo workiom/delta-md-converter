@@ -662,14 +662,20 @@ describe('Delta to Markdown', () => {
                 "attributes": {
                     "link": "http://link.com/some+(link_with_brackets)+and-continue?id=1&artical=24#Query"
                 },
-                "insert": "Complex Link"
+                "insert": "Complex Link\n"
+            },
+            {
+                "attributes": {
+                    "link": "https://www.google.com/maps/dir/33.5051595,36.3103176/33.5043544,36.3131017/@33.5047211,36.312464,19z/data=!3m1!4b1!4m2!4m1!3e0?hl=ar"
+                },
+                "insert": "Google Map Link"
             },
             {
                 "insert": "\n"
             }
         ]);
 
-        expect(md).toEqual("[Complex Link](http://link.com/some+(link_with_brackets)+and-continue?id=1&artical=24#Query)");
+        expect(md).toEqual("[Complex Link](http://link.com/some+(link_with_brackets)+and-continue?id=1&artical=24#Query)\n\n[Google Map Link](https://www.google.com/maps/dir/33.5051595,36.3103176/33.5043544,36.3131017/@33.5047211,36.312464,19z/data=!3m1!4b1!4m2!4m1!3e0?hl=ar)");
     });
 
     // Mentions And Fields
@@ -1497,7 +1503,7 @@ describe('Markdown to Delta', () => {
     });
 
     test('Complex link', () => {
-        const ops = deltaToMdConverter.markdownToDelta("[Complex Link](http://link.com/some+(link_with_brackets)+and-continue?id=1&artical=24#Query)");
+        const ops = deltaToMdConverter.markdownToDelta("[Complex Link](http://link.com/some+(link_with_brackets)+and-continue?id=1&artical=24#Query)\n\n[Google Map Link](https://www.google.com/maps/dir/33.5051595,36.3103176/33.5043544,36.3131017/@33.5047211,36.312464,19z/data=!3m1!4b1!4m2!4m1!3e0?hl=ar)");
 
         expect(ops).toStrictEqual([
             {
@@ -1505,6 +1511,15 @@ describe('Markdown to Delta', () => {
                     "link": "http://link.com/some+(link_with_brackets)+and-continue?id=1&artical=24#Query"
                 },
                 "insert": "Complex Link"
+            },
+            {
+                "insert": "\n"
+            },
+            {
+                "attributes": {
+                    "link": "https://www.google.com/maps/dir/33.5051595,36.3103176/33.5043544,36.3131017/@33.5047211,36.312464,19z/data=!3m1!4b1!4m2!4m1!3e0?hl=ar"
+                },
+                "insert": "Google Map Link"
             },
             {
                 "insert": "\n"

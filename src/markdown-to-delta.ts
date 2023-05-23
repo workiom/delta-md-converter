@@ -41,7 +41,7 @@ class MarkdownToDelta {
             return { type: NodeType.List, text: tag, value: {text: cleanTag, options: options} };
         });
         // Link
-        parser.addRule(/\[(.*?)\]\(([-a-zA-Z0-9@:%_\+.~#?&\/\(\)=]*)\)/gi, (tag, linkLabel, linkUrl): any => {
+        parser.addRule(/\[(.*?)\]\(([-a-zA-Z0-9@:%_\+.~!,#?&\/\(\)=]*)\)/gi, (tag, linkLabel, linkUrl): any => {
             return { type: NodeType.Link, text: tag, value: {text: linkLabel, options: {link: linkUrl}} };
         });
         // Bold
