@@ -24,9 +24,6 @@
     "quill",
     "editor"
   ],
-  "publishConfig": {
-    "@workiom:registry": "https://npm.pkg.github.com"
-  },
   "author": "Workiom Inc.",
   "license": "MIT",
   "bugs": {
