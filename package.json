@@ -1,6 +1,6 @@
 {
   "name": "@workiom/delta-md-converter",
-  "version": "0.0.82",
+  "version": "0.0.9",
   "description": "Convert delta from/to markdown",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
