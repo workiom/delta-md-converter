@@ -232,5 +232,5 @@ class MdToHtml {
 
 export const markdownToHtml = (md: string, mentions?: IStringMention[]) => {
     const dtm = new MdToHtml(mentions);
-    return dtm.convert(md);
+    return dtm.convert(md + '\n');
 };
