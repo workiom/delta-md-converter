@@ -174,7 +174,7 @@ class MdToHtml {
 
             default:
                 if (node?.options?.type) {
-                    return `<span class="mention-item ${node.options.type}-type">${node.options.value}</span>`;
+                    return `<span class="mention-item ${node.options.type}-type">${node.options.denotationChar}${node.options.value}</span>`;
                 }
 
                 const removeNextLine = node?.previousNode && node.previousNode.type === NodeType.Blockquote;

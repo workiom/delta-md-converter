@@ -170,7 +170,7 @@ describe('Delta to HTML', () => {
         }];
         const html = mdToHtmlConverter.markdownToHtml("_U_1234 _F_123456_A_00000000z0000z0000z0000z000000000000 Some Field", mentions);
 
-        expect(html).toEqual("<span class=\"mention-item mention-type\">User Name</span> <span class=\"mention-item field-type\">Field Name</span> Some Field");
+        expect(html).toEqual("<span class=\"mention-item mention-type\">@User Name</span> <span class=\"mention-item field-type\">Field Name</span> Some Field");
     });
 
     // Mentions
@@ -189,7 +189,7 @@ describe('Delta to HTML', () => {
         }];
         const html = mdToHtmlConverter.markdownToHtml("_U_5555 Please ask _U_4444 to give you the docs", mentions);
 
-        expect(html).toEqual("<span class=\"mention-item mention-type\">User 1</span> Please ask <span class=\"mention-item mention-type\">User 2</span> to give you the docs");
+        expect(html).toEqual("<span class=\"mention-item mention-type\">@User 1</span> Please ask <span class=\"mention-item mention-type\">@User 2</span> to give you the docs");
     });
 
     // Customer case
