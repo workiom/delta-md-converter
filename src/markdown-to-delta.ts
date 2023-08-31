@@ -246,6 +246,8 @@ class MarkdownToDelta {
                 }
             }
 
+            const newLineAttributes = ['header', 'blockquote', 'code-block', 'list'];
+
             // Skip New line after block
             const lastOps = ops[ops.length - 1];
             const lastOpsWithoutNewLine = lastOps && lastOps.attributes && (
@@ -258,9 +260,14 @@ class MarkdownToDelta {
             if (opItem.insert === '\n' && !opItem.attributes) {
                 const prevOps = convertedOps[i - 1];
                 const nextOps = convertedOps[i + 2];
+
                 if (prevOps && nextOps && JSON.stringify(prevOps.attributes) === JSON.stringify(nextOps.attributes)) {
-                    prevOps.insert = '\n\n';
-                    continue;
+                    const attributes = Object.keys(prevOps.attributes);
+                    const oneInAttribute = attributes.some(attr => newLineAttributes.includes(attr));
+                    if (oneInAttribute) {
+                        prevOps.insert = '\n\n';
+                        continue;
+                    }
                 }
             }
 

@@ -82,6 +82,49 @@ describe('Markdown to Delta', () => {
         ]);
     });
 
+    test('Heading', () => {
+        const ops = deltaToMdConverter.markdownToDelta("Head 1\n======\n\nsome text\n\nHead 2\n------\n\nsome text\n\n### Head 3\n\nsome text");
+
+        expect(ops).toStrictEqual([
+            {
+                insert: "Head 1",
+            },
+            {
+                insert: "\n",
+                attributes: {
+                    header: 1,
+                },
+            },
+            {
+                insert: "some text\n",
+            },
+            {
+                insert: "Head 2",
+            },
+            {
+                insert: "\n",
+                attributes: {
+                    header: 2,
+                },
+            },
+            {
+                insert: "some text\n",
+            },
+            {
+                insert: "Head 3",
+            },
+            {
+                insert: "\n",
+                attributes: {
+                    header: 3,
+                },
+            },
+            {
+                insert: "some text\n",
+            },
+        ]);
+    });
+
     test('Text after header', () => {
         const ops = deltaToMdConverter.markdownToDelta("Head 1\n======\n\nNormal text");
 
@@ -508,6 +551,31 @@ describe('Markdown to Delta', () => {
         ]);
     });
 
+    test('Bold After Bold', () => {
+        const ops = deltaToMdConverter.markdownToDelta("**Bold**\n\n**Bold**");
+
+        expect(ops).toStrictEqual([
+            {
+                "attributes": {
+                    "bold": true
+                },
+                "insert": "Bold"
+            },
+            {
+                "insert": "\n"
+            },
+            {
+                "attributes": {
+                    "bold": true
+                },
+                "insert": "Bold"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+    });
+
     test('Bold & Italic Inside List', () => {
         const ops = deltaToMdConverter.markdownToDelta("* **Bold** **_Bold & Italic_**");
 
@@ -537,6 +605,43 @@ describe('Markdown to Delta', () => {
             {
                 "insert": "\n"
             }
+        ]);
+    });
+
+    test('Bold Inside List', () => {
+        const ops = deltaToMdConverter.markdownToDelta("**Bold text**\n\n1. Some text with **bold** text");
+
+        expect(ops).toStrictEqual([
+            {
+                insert: "Bold text",
+                attributes: {
+                    bold: true,
+                },
+            },
+            {
+                insert: "\n",
+            },
+            {
+                insert: "Some text with ",
+            },
+            {
+                insert: "bold",
+                attributes: {
+                    bold: true,
+                },
+            },
+            {
+                insert: " text",
+            },
+            {
+                insert: "\n",
+                attributes: {
+                    list: "ordered",
+                },
+            },
+            {
+                insert: "\n",
+            },
         ]);
     });
 

@@ -65,7 +65,7 @@ class MarkdownToNodes {
             return { type: NodeType.Header, text: tag, value: {text: cleanTag, options: {header: 2}} };
         });
         // Header 3
-        parser.addRule(/(^|\n)\#+\s(.*)[\n$]/gi, (tag, lines, cleanTag): any => {
+        parser.addRule(/(^|\n)\#+\s(.*)\n[\n$]/gi, (tag, lines, cleanTag): any => {
             return { type: NodeType.Header, text: tag, value: {text: cleanTag, options: {header: 3}} };
         });
         // Quote
