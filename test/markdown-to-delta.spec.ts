@@ -82,7 +82,7 @@ describe('Markdown to Delta', () => {
         ]);
     });
 
-    test('Heading', () => {
+    test('Heading with text', () => {
         const ops = deltaToMdConverter.markdownToDelta("Head 1\n======\n\nsome text\n\nHead 2\n------\n\nsome text\n\n### Head 3\n\nsome text");
 
         expect(ops).toStrictEqual([
@@ -124,6 +124,70 @@ describe('Markdown to Delta', () => {
             },
         ]);
     });
+
+    test('Heading with list', () => {
+        const ops = deltaToMdConverter.markdownToDelta("Head 1\n========\n\n* Bullet list 1\n\nHead 2\n------\n\n* Bullet list 2\n\n### Head 3\n\n* Bullet list 3");
+
+        expect(ops).toStrictEqual([
+            {
+                insert: "Head 1",
+            },
+            {
+                insert: "\n",
+                attributes: {
+                    header: 1,
+                },
+            },
+            {
+                insert: "Bullet list 1",
+            },
+            {
+                "attributes": {
+                    "list": "bullet"
+                },
+                "insert": "\n"
+            },
+            {
+                insert: "Head 2",
+            },
+            {
+                insert: "\n",
+                attributes: {
+                    header: 2,
+                },
+            },
+            {
+                insert: "Bullet list 2",
+            },
+            {
+                "attributes": {
+                    "list": "bullet"
+                },
+                "insert": "\n"
+            },
+            {
+                insert: "Head 3",
+            },
+            {
+                insert: "\n",
+                attributes: {
+                    header: 3,
+                },
+            },
+            {
+                insert: "Bullet list 3",
+            },
+            {
+                "attributes": {
+                    "list": "bullet"
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+    })
 
     test('Text after header', () => {
         const ops = deltaToMdConverter.markdownToDelta("Head 1\n======\n\nNormal text");
