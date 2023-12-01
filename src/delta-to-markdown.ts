@@ -72,7 +72,10 @@ class DeltaToMarkdown {
                     subBoldContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
                 }
 
-                return `**${subBoldContent ? subBoldContent : content}**`;
+                let newBoldText = subBoldContent ? subBoldContent : content;
+                const boldLeadingSpaces = newBoldText.match(/^\s*/)?.[0] || '';
+                const boldTrailingSpaces = newBoldText.match(/\s*$/)?.[0] || '';
+                return `${boldLeadingSpaces}**${newBoldText.trim()}**${boldTrailingSpaces}`;
 
             case NodeType.Italic:
                 let subItalicContent = '';
@@ -81,7 +84,10 @@ class DeltaToMarkdown {
                     subItalicContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
                 }
 
-                return `_${subItalicContent ? subItalicContent : content}_`;
+                let newItalicText = subItalicContent ? subItalicContent : content;
+                const italicLeadingSpaces = newItalicText.match(/^\s*/)?.[0] || '';
+                const italicTrailingSpaces = newItalicText.match(/\s*$/)?.[0] || '';
+                return `${italicLeadingSpaces}_${newItalicText.trim()}_${italicTrailingSpaces}`;
 
             case NodeType.Strike:
                 let subStrikeContent = '';
@@ -90,7 +96,10 @@ class DeltaToMarkdown {
                     subStrikeContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
                 }
 
-                return `~~${subStrikeContent ? subStrikeContent : content}~~`;
+                let newStrikeText = subStrikeContent ? subStrikeContent : content;
+                const strikeLeadingSpaces = newStrikeText.match(/^\s*/)?.[0] || '';
+                const strikeTrailingSpaces = newStrikeText.match(/\s*$/)?.[0] || '';
+                return `${strikeLeadingSpaces}~~${newStrikeText.trim()}~~${strikeTrailingSpaces}`;
 
             case NodeType.Code:
                 let subCodeContent = '';
@@ -98,8 +107,10 @@ class DeltaToMarkdown {
                 for (const subNode of subCodeNodes) {
                     subCodeContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
                 }
-
-                return `\`${subCodeContent ? subCodeContent : content}\``;
+                let newCodeText = subCodeContent ? subCodeContent : content;
+                const codeLeadingSpaces = newCodeText.match(/^\s*/)?.[0] || '';
+                const codeTrailingSpaces = newCodeText.match(/\s*$/)?.[0] || '';
+                return `${codeLeadingSpaces}\`${newCodeText.trim()}\`${codeTrailingSpaces}`;
 
             case NodeType.Link:
                 return `[${content}](${options.link})`;

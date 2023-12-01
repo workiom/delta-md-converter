@@ -45,6 +45,43 @@ describe('Delta to Markdown', () => {
         expect(md).toEqual("**Bold** _Italic_ ~~Strike~~ [Link](http://link.com)");
     });
 
+    test('Bold, Italic, Strike, and code with spaces', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            {
+                "attributes": {
+                    "bold": true
+                },
+                "insert": "Bold "
+            },
+            {
+                "attributes": {
+                    "italic": true
+                },
+                "insert": "Italic "
+            },
+            {
+                "attributes": {
+                    "strike": true
+                },
+                "insert": "Strike "
+            },
+            {
+                "attributes": {
+                    "code": true
+                },
+                "insert": "Code "
+            },
+            {
+                "insert": "Simple text"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+
+        expect(md).toEqual("**Bold** _Italic_ ~~Strike~~ `Code` Simple text");
+    });
+
     test('Heading', () => {
         const md = deltaToMdConverter.deltaToMarkdown([
             {
