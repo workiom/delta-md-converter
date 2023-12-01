@@ -85,14 +85,19 @@ class MarkdownToNodes {
 
         for (let i = 0; i < tree.length; i++) {
             const treeItem = tree[i];
-            if (treeItem.type !== 'text') {
+            const treeType = treeItem.type as any;
+            if (treeType !== 'text' && treeType !== NodeType.Link) {
                 const subTree = this._parseText((treeItem.value as any).text);
                 tree[i] = {
                     ...treeItem,
                     subTree: subTree || []
                 };
+            } else {
+                tree[i] = {
+                    ...treeItem,
+                    subTree: []
+                };
             }
-
         }
 
         return tree;
@@ -200,6 +205,15 @@ class MarkdownToNodes {
                     lastNode.options = treeItem.value?.options || null;
                 }
 
+            } else {
+                const node = new CustomNode();
+                node.type = treeItem.type;
+                node.textContent = treeItem.value.text;
+                node.options = treeItem.value?.options || null;
+
+                node.previousNode = lastNode;
+                lastNode.nextNode = node;
+                lastNode = node;
             }
         }
 

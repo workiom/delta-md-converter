@@ -725,6 +725,22 @@ describe('Markdown to Delta', () => {
         ]);
     });
 
+    test('Link and Name With Underscore', () => {
+        const ops = deltaToMdConverter.markdownToDelta("[Link_with_underscore](http://link_with_underscore.com)");
+
+        expect(ops).toEqual([
+            {
+                "insert": "Link_with_underscore",
+                "attributes": {
+                    "link": "http://link_with_underscore.com"
+                }
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+    });
+
     test('Empty Lines', () => {
         const ops = deltaToMdConverter.markdownToDelta("Line 1\n\n\n\n\n\nLine 2");
 
