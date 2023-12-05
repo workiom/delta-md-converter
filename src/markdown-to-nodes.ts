@@ -40,9 +40,13 @@ class MarkdownToNodes {
             }
             return { type: NodeType.List, text: tag, value: {text: cleanTag, options: options} };
         });
-        // Link
+        // Md Link
         parser.addRule(/\[(.*?)\]\(([-a-zA-Z0-9@:%_\+.~!,#?&\/\(\)=]*)\)/gi, (tag, linkLabel, linkUrl): any => {
             return { type: NodeType.Link, text: tag, value: {text: linkLabel, options: {link: linkUrl}} };
+        });
+        // Link
+        parser.addRule(/(?:^|\n)((?:http(s)?:\/\/.)?(?:[\w]+\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-z]{1,63}\b(?:[-a-zA-Z0-9@:%_\+.~#!?&//=,]*))[\n$]/gi, (tag, linkUrl): any => {
+            return { type: NodeType.Link, text: tag, value: {text: linkUrl, options: {link: linkUrl}} };
         });
         // Bold
         parser.addRule(/\*\*((?:[^\*]\*?)*)\*\*/gi, (tag, cleanTag): any => {

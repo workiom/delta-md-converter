@@ -3,6 +3,22 @@ import { IStringMention } from '../src/markdown-to-nodes';
 
 describe('Markdown to Delta', () => {
     test('Bold, Italic, Strike and Link', () => {
+        const ops = deltaToMdConverter.markdownToDelta("https://mid.ru/ru/press_service/minister_speeches/1597874");
+
+        expect(ops).toStrictEqual([
+            {
+                "attributes": {
+                    "link": "https://mid.ru/ru/press_service/minister_speeches/1597874"
+                },
+                "insert": "https://mid.ru/ru/press_service/minister_speeches/1597874"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+    });
+
+    test('Bold, Italic, Strike and Link', () => {
         const ops = deltaToMdConverter.markdownToDelta("**Bold** _Italic_ ~~Strike~~ [Link](http://link.com)");
 
         expect(ops).toStrictEqual([
