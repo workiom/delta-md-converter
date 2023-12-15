@@ -98,6 +98,31 @@ describe('Markdown to Delta', () => {
         ]);
     });
 
+    test('Bold, Italic, Strike and Link', () => {
+        const ops = deltaToMdConverter.markdownToDelta("* List item with [Link](http://link.com)");
+
+        expect(ops).toStrictEqual([
+            {
+                "insert": "List item with "
+            },
+            {
+                "attributes": {
+                    "link": "http://link.com"
+                },
+                "insert": "Link"
+            },
+            {
+                "attributes": {
+                    "list": "bullet"
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+    });
+
     test('Heading with text', () => {
         const ops = deltaToMdConverter.markdownToDelta("Head 1\n======\n\nsome text\n\nHead 2\n------\n\nsome text\n\n### Head 3\n\nsome text");
 

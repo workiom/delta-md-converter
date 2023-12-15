@@ -123,10 +123,16 @@ class MarkdownToNodes {
     private _convertTreeNodesToCustomNodes(treeNodes: any, previousNode: CustomNode, types: NodeType[] = [], subItem = false): CustomNode {
         let lastNode = previousNode;
         for (const treeItem of treeNodes) {
-            if (treeItem.type === 'text') {
+            if (treeItem.type === 'text' || treeItem.type === NodeType.Link) {
                 const node = new CustomNode();
                 node.type = null;
                 node.textContent = treeItem.text;
+
+                if (treeItem.type === NodeType.Link) {
+                    node.type = NodeType.Link;
+                    node.textContent = treeItem.value.text;
+                    node.options = treeItem.value?.options;
+                }
 
                 if (subItem) {
                     lastNode.type = types[0];
