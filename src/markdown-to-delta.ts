@@ -262,7 +262,7 @@ class MarkdownToDelta {
                 const nextOps = convertedOps[i + 2];
 
                 if (prevOps && nextOps && JSON.stringify(prevOps.attributes) === JSON.stringify(nextOps.attributes)) {
-                    const attributes = Object.keys(prevOps.attributes);
+                    const attributes = prevOps.attributes ? Object.keys(prevOps.attributes) : [];
                     const oneInAttribute = attributes.some(attr => newLineAttributes.includes(attr));
                     if (oneInAttribute) {
                         prevOps.insert = '\n\n';

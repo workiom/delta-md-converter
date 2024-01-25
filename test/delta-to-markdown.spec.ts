@@ -116,6 +116,43 @@ describe('Delta to Markdown', () => {
         expect(md).toEqual("Head 1\n======\n\nHead 2\n------\n\n### Head 3");
     });
 
+    test('Heading in ordered list', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            {
+                "insert": "1. Header"
+            },
+            {
+                "attributes": {
+                    "header": 1
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "2. Header"
+            },
+            {
+                "attributes": {
+                    "header": 2
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "3. Header"
+            },
+            {
+                "attributes": {
+                    "header": 3
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+
+        expect(md).toEqual("1. Header\n=========\n\n2. Header\n---------\n\n### 3. Header");
+    })
+
     test('Text after header', () => {
         const md = deltaToMdConverter.deltaToMarkdown([
             {
@@ -153,6 +190,177 @@ describe('Delta to Markdown', () => {
 
         expect(md).toEqual("* List 1\n\nNormal text");
     });
+
+    test('Bold link inside list', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            {
+                "attributes": {
+                    "bold": true
+                },
+                "insert": "Some text"
+            },
+            {
+                "insert": " "
+            },
+            {
+                "attributes": {
+                    "bold": true,
+                    "link": "http://link.com"
+                },
+                "insert": "link "
+            },
+            {
+                "attributes": {
+                    "bold": true
+                },
+                "insert": "Other text"
+            },
+            {
+                "attributes": {
+                    "list": "bullet"
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+
+        expect(md).toEqual("* **Some text** **[link ](http://link.com)****Other text**");
+    });
+
+    test('Complex heading with list', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            {
+                "insert": "This is a header h1"
+            },
+            {
+                "attributes": {
+                    "header": 1
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "this is a list"
+            },
+            {
+                "attributes": {
+                    "list": "bullet"
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "And a nested item"
+            },
+            {
+                "attributes": {
+                    "indent": 1,
+                    "list": "bullet"
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "And even further nested item"
+            },
+            {
+                "attributes": {
+                    "indent": 2,
+                    "list": "bullet"
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "More items"
+            },
+            {
+                "attributes": {
+                    "list": "bullet"
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "Another one\nThis is a list"
+            },
+            {
+                "attributes": {
+                    "list": "ordered"
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "Nest this list"
+            },
+            {
+                "attributes": {
+                    "indent": 1,
+                    "list": "ordered"
+                },
+                "insert": "\n"
+            },
+            {
+                "attributes": {
+                    "bold": true
+                },
+                "insert": "Make this bold"
+            },
+            {
+                "attributes": {
+                    "indent": 1,
+                    "list": "ordered"
+                },
+                "insert": "\n"
+            },
+            {
+                "attributes": {
+                    "italic": true
+                },
+                "insert": "Italic"
+            },
+            {
+                "attributes": {
+                    "indent": 1,
+                    "list": "ordered"
+                },
+                "insert": "\n\n"
+            },
+            {
+                "attributes": {
+                    "strike": true
+                },
+                "insert": "stirk"
+            },
+            {
+                "attributes": {
+                    "indent": 1,
+                    "list": "ordered"
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "H2"
+            },
+            {
+                "attributes": {
+                    "header": 2
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "H3"
+            },
+            {
+                "attributes": {
+                    "header": 3
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+
+        expect(md).toEqual("This is a header h1\n===================\n\n* this is a list\n\n    * And a nested item\n\n        * And even further nested item\n\n* More items\n\nAnother one\n\n1. This is a list\n\n    1. Nest this list\n\n    2. **Make this bold**\n\n    3. _Italic_\n\n    4. ~~stirk~~\n\nH2\n--\n\n### H3");
+    })
 
     test('Quote, Code And Code block', () => {
         const md = deltaToMdConverter.deltaToMarkdown([

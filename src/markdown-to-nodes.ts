@@ -22,6 +22,18 @@ class MarkdownToNodes {
                 });
             }
         }
+        // Header 1
+        parser.addRule(/(.*)\n=+\n[\n$]?/gi, (tag, cleanTag): any => {
+            return { type: NodeType.Header, text: tag, value: {text: cleanTag, options: {header: 1}} };
+        });
+        // Header 2
+        parser.addRule(/(.*)\n-+\n[\n$]?/gi, (tag, cleanTag): any => {
+            return { type: NodeType.Header, text: tag, value: {text: cleanTag, options: {header: 2}} };
+        });
+        // Header 3
+        parser.addRule(/(^|\n)\#+\s(.*)\n[\n$]?/gi, (tag, lines, cleanTag): any => {
+            return { type: NodeType.Header, text: tag, value: {text: cleanTag, options: {header: 3}} };
+        });
         // List Bullet
         parser.addRule(/(^|\n)( *)\*(?!\*) (.*)[\n$]/gi, (tag, line, spaces, cleanTag): any => {
             const indent = Math.floor(spaces.length / 4);
@@ -40,6 +52,20 @@ class MarkdownToNodes {
             }
             return { type: NodeType.List, text: tag, value: {text: cleanTag, options: options} };
         });
+        // Bold
+        parser.addRule(/\*\*((?:[^\*])*)\*\*/gi, (tag, cleanTag): any => {
+            return { type: NodeType.Bold, text: tag, value: {text: cleanTag} };
+        });
+        // Italic
+        parser.addRule(/((?:(?:^|(?:\s|\*|\~))\_)|(?:\_(?:\s|\*|\~)))([^_]*)((?:(?:\s|\*|\~)\_)|(?:\_(?:(?:\s|\*|\~)|$)))/gi, (tag, before, cleanTag, after): any => {
+            const spacesBefore = before.replace(/\_/g, '');
+            const spacesAfter = after.replace(/\_/g, '');
+            return { type: NodeType.Italic, text: tag, value: {before: spacesBefore, text: cleanTag, after: spacesAfter} };
+        });
+        // Strike
+        parser.addRule(/\~\~((?:[^\~]\~?)*)\~\~/gi, (tag, cleanTag): any => {
+            return { type: NodeType.Strike, text: tag, value: {text: cleanTag} };
+        });
         // Md Link
         parser.addRule(/\[(.*?)\]\(([-a-zA-Z0-9@:%_\+.~!,#?&\/\(\)=]*)\)/gi, (tag, linkLabel, linkUrl): any => {
             return { type: NodeType.Link, text: tag, value: {text: linkLabel, options: {link: linkUrl}} };
@@ -47,30 +73,6 @@ class MarkdownToNodes {
         // Link
         parser.addRule(/(?:^|\n)((?:http(s)?:\/\/.)?(?:[\w]+\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-z]{1,63}\b(?:[-a-zA-Z0-9@:%_\+.~#!?&//=,]*))[\n$]/gi, (tag, linkUrl): any => {
             return { type: NodeType.Link, text: tag, value: {text: linkUrl, options: {link: linkUrl}} };
-        });
-        // Bold
-        parser.addRule(/\*\*((?:[^\*]\*?)*)\*\*/gi, (tag, cleanTag): any => {
-            return { type: NodeType.Bold, text: tag, value: {text: cleanTag} };
-        });
-        // Italic
-        parser.addRule(/\_([^_]*)\_/gi, (tag, cleanTag): any => {
-            return { type: NodeType.Italic, text: tag, value: {text: cleanTag} };
-        });
-        // Strike
-        parser.addRule(/\~\~((?:[^\~]\~?)*)\~\~/gi, (tag, cleanTag): any => {
-            return { type: NodeType.Strike, text: tag, value: {text: cleanTag} };
-        });
-        // Header 1
-        parser.addRule(/(.*)\n=+\n[\n$]?/gi, (tag, cleanTag): any => {
-            return { type: NodeType.Header, text: tag, value: {text: cleanTag, options: {header: 1}} };
-        });
-        // Header 2
-        parser.addRule(/(.*)\n-+\n[\n$]?/gi, (tag, cleanTag): any => {
-            return { type: NodeType.Header, text: tag, value: {text: cleanTag, options: {header: 2}} };
-        });
-        // Header 3
-        parser.addRule(/(^|\n)\#+\s(.*)\n[\n$]?/gi, (tag, lines, cleanTag): any => {
-            return { type: NodeType.Header, text: tag, value: {text: cleanTag, options: {header: 3}} };
         });
         // Quote
         parser.addRule(/(^|\n)\>\s(.*)[\n$]/gi, (tag, lines, cleanTag): any => {
@@ -92,10 +94,27 @@ class MarkdownToNodes {
             const treeType = treeItem.type as any;
             if (treeType !== 'text' && treeType !== NodeType.Link) {
                 const subTree = this._parseText((treeItem.value as any).text);
+
+                const before = (treeItem.value as any).before;
+                const after = (treeItem.value as any).after;
+
+                delete (treeItem.value as any).before;
+                delete (treeItem.value as any).after;
+
                 tree[i] = {
                     ...treeItem,
                     subTree: subTree || []
                 };
+
+                if (before) {
+                    tree.splice(i, 0, {type: 'text', text: before, subTree: []});
+                    i++;
+                }
+
+                if (after) {
+                    tree.splice(i + 1, 0, {type: 'text', text: after, subTree: []});
+                    i++;
+                }
             } else {
                 tree[i] = {
                     ...treeItem,
@@ -124,6 +143,10 @@ class MarkdownToNodes {
         let lastNode = previousNode;
         for (const treeItem of treeNodes) {
             if (treeItem.type === 'text' || treeItem.type === NodeType.Link) {
+                if (treeItem.type === 'text' && lastNode.textContent === '\n' && lastNode.textContent === treeItem.text) {
+                    continue;
+                }
+
                 const node = new CustomNode();
                 node.type = null;
                 node.textContent = treeItem.text;

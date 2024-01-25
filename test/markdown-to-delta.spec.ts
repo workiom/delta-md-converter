@@ -2,7 +2,7 @@ import deltaToMdConverter from '../src/index'
 import { IStringMention } from '../src/markdown-to-nodes';
 
 describe('Markdown to Delta', () => {
-    test('Bold, Italic, Strike and Link', () => {
+    test('Link with underscore', () => {
         const ops = deltaToMdConverter.markdownToDelta("https://mid.ru/ru/press_service/minister_speeches/1597874");
 
         expect(ops).toStrictEqual([
@@ -98,7 +98,44 @@ describe('Markdown to Delta', () => {
         ]);
     });
 
-    test('Bold, Italic, Strike and Link', () => {
+    test('Header before in ordered list', () => {
+        const ops = deltaToMdConverter.markdownToDelta("1. Header\n=========\n\n2. Header\n---------\n\n### 3. Header");
+
+        expect(ops).toStrictEqual([
+            {
+                "insert": "1. Header"
+            },
+            {
+                "attributes": {
+                    "header": 1
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "2. Header"
+            },
+            {
+                "attributes": {
+                    "header": 2
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "3. Header"
+            },
+            {
+                "attributes": {
+                    "header": 3
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+    });
+
+    test('Link inside a list item', () => {
         const ops = deltaToMdConverter.markdownToDelta("* List item with [Link](http://link.com)");
 
         expect(ops).toStrictEqual([
@@ -121,6 +158,61 @@ describe('Markdown to Delta', () => {
                 "insert": "\n"
             }
         ]);
+    });
+
+    test('Bold link', () => {
+        const ops = deltaToMdConverter.markdownToDelta("**[link](http://link.com)**");
+
+        expect(ops).toStrictEqual([
+            {
+                "attributes": {
+                    "bold": true,
+                    "link": "http://link.com"
+                },
+                "insert": "link"
+            },
+            {
+                "insert": "\n"
+            }
+        ]);
+    });
+
+    test('Bold link inside list', () => {
+        const ops = deltaToMdConverter.markdownToDelta("* **Some text** **[link ](http://link.com)****Other text**");
+
+        expect(ops).toStrictEqual([
+            {
+                "attributes": {
+                    "bold": true
+                },
+                "insert": "Some text"
+            },
+            {
+                "insert": " "
+            },
+            {
+                "attributes": {
+                    "bold": true,
+                    "link": "http://link.com"
+                },
+                "insert": "link "
+            },
+            {
+                "attributes": {
+                    "bold": true
+                },
+                "insert": "Other text"
+            },
+            {
+                "attributes": {
+                    "list": "bullet"
+                },
+                "insert": "\n"
+            },
+            {
+                "insert": "\n"
+            }
+        ])
     });
 
     test('Heading with text', () => {
@@ -228,7 +320,7 @@ describe('Markdown to Delta', () => {
                 "insert": "\n"
             }
         ]);
-    })
+    });
 
     test('Text after header', () => {
         const ops = deltaToMdConverter.markdownToDelta("Head 1\n======\n\nNormal text");
@@ -1015,25 +1107,23 @@ describe('Markdown to Delta', () => {
                 },
             },
             {
-                insert: " ,_\n",
-            },
-            {
-                insert: "Google 2",
-                attributes: {
-                    link: "https://google.com",
-                },
-            },
-            {
                 insert: " ,",
             },
             {
                 insert: "\n",
+            },
+            {
+                insert: "\nGoogle 2 ,",
                 attributes: {
                     italic: true,
+                    link: "https://google.com",
                 },
             },
             {
-                insert: "[Google 3]https://google.com)\n",
+                insert: "\n",
+            },
+            {
+                insert: "\n_[Google 3]https://google.com)\n",
             },
         ]);
     });

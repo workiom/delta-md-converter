@@ -196,6 +196,6 @@ describe('Delta to HTML', () => {
     test('Multiline Inside Blockquote', () => {
         const html = mdToHtmlConverter.markdownToHtml("[Google](https://google.com) ,\n\n_[Google 2 ,](https://google.com)_\n\n_[Google 3](https://google.com)");
 
-        expect(html).toEqual("<a href=\"https://google.com\" target=\"_blank\">Google</a> ,<br>_<a href=\"https://google.com\" target=\"_blank\">Google 2 ,</a><i><br></i><a href=\"https://google.com\" target=\"_blank\">Google 3</a>");
+        expect(html).toEqual("<a href=\"https://google.com\" target=\"_blank\">Google</a> ,<br><br><i><a href=\"https://google.com\" target=\"_blank\">Google 2 ,</a></i><br><br>_<a href=\"https://google.com\" target=\"_blank\">Google 3</a>");
     });
 });
