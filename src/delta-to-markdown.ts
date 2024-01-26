@@ -18,8 +18,12 @@ class DeltaToMarkdown {
     constructor(public mentions?: IDeltaMention[]) { }
 
     private _getHeaderFormatting(level: number, content: string): string {
-        const { before, after } = this._HEADER_CHARS[level - 1];
+        const headerConfig = this._HEADER_CHARS[level - 1];
+        if (!headerConfig) {
+            return content;
+        }
 
+        const { before, after } = headerConfig;
         if (before) {
             return `${before} ${content}`;
         } else {

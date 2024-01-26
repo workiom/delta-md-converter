@@ -232,7 +232,7 @@ describe('Delta to Markdown', () => {
     test('Complex heading with list', () => {
         const md = deltaToMdConverter.deltaToMarkdown([
             {
-                "insert": "This is a header h1"
+                "insert": "This is a title\n\nThis is a header h1"
             },
             {
                 "attributes": {
@@ -355,11 +355,20 @@ describe('Delta to Markdown', () => {
                 "insert": "\n"
             },
             {
+                "insert": "h4"
+            },
+            {
+                "attributes": {
+                    "header": 4
+                },
+                "insert": "\n"
+            },
+            {
                 "insert": "\n"
             }
         ]);
 
-        expect(md).toEqual("This is a header h1\n===================\n\n* this is a list\n\n    * And a nested item\n\n        * And even further nested item\n\n* More items\n\nAnother one\n\n1. This is a list\n\n    1. Nest this list\n\n    2. **Make this bold**\n\n    3. _Italic_\n\n    4. ~~stirk~~\n\nH2\n--\n\n### H3");
+        expect(md).toEqual("This is a title\n\n\n\nThis is a header h1\n===================\n\n* this is a list\n\n    * And a nested item\n\n        * And even further nested item\n\n* More items\n\nAnother one\n\n1. This is a list\n\n    1. Nest this list\n\n    2. **Make this bold**\n\n    3. _Italic_\n\n    4. ~~stirk~~\n\nH2\n--\n\n### H3\n\nh4");
     })
 
     test('Quote, Code And Code block', () => {
