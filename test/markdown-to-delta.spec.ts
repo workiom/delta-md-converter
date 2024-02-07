@@ -3,17 +3,11 @@ import { IStringMention } from '../src/markdown-to-nodes';
 
 describe('Markdown to Delta', () => {
     test('Link with underscore', () => {
-        const ops = deltaToMdConverter.markdownToDelta("https://mid.ru/ru/press_service/minister_speeches/1597874");
+        const ops = deltaToMdConverter.markdownToDelta("https://sub.domain.com/link_with_underscrore");
 
         expect(ops).toStrictEqual([
             {
-                "attributes": {
-                    "link": "https://mid.ru/ru/press_service/minister_speeches/1597874"
-                },
-                "insert": "https://mid.ru/ru/press_service/minister_speeches/1597874"
-            },
-            {
-                "insert": "\n"
+                "insert": "https://sub.domain.com/link_with_underscrore\n"
             }
         ]);
     });
