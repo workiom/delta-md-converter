@@ -53,8 +53,8 @@ class MarkdownToNodes {
             return { type: NodeType.List, text: tag, value: {text: cleanTag, options: options} };
         });
         // Bold
-        parser.addRule(/\*\*((?:[^\*])*)\*\*/gi, (tag, cleanTag): any => {
-            return { type: NodeType.Bold, text: tag, value: {text: cleanTag} };
+        parser.addRule(/\*\*((?:[^\*])*)?\*\*/gi, (tag, cleanTag): any => {
+            return { type: NodeType.Bold, text: tag, value: {text: cleanTag || ''} };
         });
         // Italic
         parser.addRule(/((?:(?:^|(?:\s|\*|\~))\_)|(?:\_(?:\s|\*|\~)))([^_]*)((?:(?:\s|\*|\~)\_)|(?:\_(?:(?:\s|\*|\~)|$)))/gi, (tag, before, cleanTag, after): any => {
@@ -93,7 +93,7 @@ class MarkdownToNodes {
             const treeItem = tree[i];
             const treeType = treeItem.type as any;
             if (treeType !== 'text' && treeType !== NodeType.Link) {
-                const subTree = this._parseText((treeItem.value as any).text);
+                const subTree = this._parseText((treeItem.value as any).text || ' ');
 
                 const before = (treeItem.value as any).before;
                 const after = (treeItem.value as any).after;

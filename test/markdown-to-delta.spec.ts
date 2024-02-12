@@ -1089,7 +1089,7 @@ describe('Markdown to Delta', () => {
         ]);
     });
 
-    // Customer case
+    // Customer case #1
     test('Invalid links styles', () => {
         const ops = deltaToMdConverter.markdownToDelta("[Google](https://google.com) ,_\n\n[Google 2](https://google.com) ,_\n\n_[Google 3]https://google.com)");
 
@@ -1118,6 +1118,53 @@ describe('Markdown to Delta', () => {
             },
             {
                 insert: "\n_[Google 3]https://google.com)\n",
+            },
+        ]);
+    });
+
+    // Customer case #2
+    test('Empty bold inside bullet item', () => {
+        const ops = deltaToMdConverter.markdownToDelta("* Normal **list** item\n\n*  **** \n\nSome normal text\n");
+
+        expect(ops).toStrictEqual([
+            {
+                insert: "Normal ",
+            },
+            {
+                insert: "list",
+                attributes: {
+                    bold: true,
+                },
+            },
+            {
+                insert: " item",
+            },
+            {
+                insert: "\n",
+                attributes: {
+                    list: "bullet",
+                },
+            },
+            {
+                insert: " ",
+            },
+            {
+                insert: " ",
+                attributes: {
+                    bold: true,
+                },
+            },
+            {
+                insert: " ",
+            },
+            {
+                insert: "\n",
+                attributes: {
+                    list: "bullet",
+                },
+            },
+            {
+                insert: "Some normal text\n\n",
             },
         ]);
     });
