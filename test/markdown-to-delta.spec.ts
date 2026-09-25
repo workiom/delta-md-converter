@@ -1363,6 +1363,36 @@ describe('Markdown to Delta', () => {
         ]);
     });
 
+    // Code content is literal
+    test('Formatting inside inline code stays literal', () => {
+        const ops = deltaToMdConverter.markdownToDelta("Run `**x** _y_ [l](http://x)` now");
+
+        expect(ops).toStrictEqual([
+            { insert: "Run " },
+            { insert: "**x** _y_ [l](http://x)", attributes: { code: true } },
+            { insert: " now\n" },
+        ]);
+    });
+
+    test('Formatting inside code block stays literal', () => {
+        const ops = deltaToMdConverter.markdownToDelta("    **x** _y_");
+
+        expect(ops).toStrictEqual([
+            { insert: "**x** _y_" },
+            { insert: "\n", attributes: { "code-block": true } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Inline code inside bold', () => {
+        const ops = deltaToMdConverter.markdownToDelta("**`x`**");
+
+        expect(ops).toStrictEqual([
+            { insert: "x", attributes: { bold: true, code: true } },
+            { insert: "\n" },
+        ]);
+    });
+
     // Customer case #1
     test('Invalid links styles', () => {
         const ops = deltaToMdConverter.markdownToDelta("[Google](https://google.com) ,_\n\n[Google 2](https://google.com) ,_\n\n_[Google 3]https://google.com)");

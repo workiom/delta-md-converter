@@ -9,8 +9,30 @@ export interface IStringMention {
 }
 
 class MarkdownToNodes {
+    private _codeSpans: string[] = [];
 
     constructor(public mentions?: IStringMention[]) { }
+
+    // Code span content becomes a private use token, so no rule matches inside it
+    private _protectCodeSpans(md: string): string {
+        return md.replace(/`([^`\n]*)`/g, (tag, content) => {
+            const index = this._codeSpans.push(content) - 1;
+            const digits = index.toString().replace(/[0-9]/g, digit => String.fromCharCode(0xE010 + Number(digit)));
+
+            return '`\uE000' + digits + '\uE001`';
+        });
+    }
+
+    private _restoreCodeSpans(node: CustomNode | null): void {
+        while (node) {
+            node.textContent = node.textContent.replace(/\uE000([\uE010-\uE019]+)\uE001/g, (tag, digits: string) => {
+                const index = digits.replace(/[\uE010-\uE019]/g, digit => (digit.charCodeAt(0) - 0xE010).toString());
+                return this._codeSpans[Number(index)];
+            });
+            node.children.forEach(child => this._restoreCodeSpans(child));
+            node = node.nextNode;
+        }
+    }
 
     private _parseText(text: string): any {
         const parser = new Parser();
@@ -93,7 +115,7 @@ class MarkdownToNodes {
         for (let i = 0; i < tree.length; i++) {
             const treeItem = tree[i];
             const treeType = treeItem.type as any;
-            if (treeType !== 'text' && treeType !== NodeType.Link) {
+            if (treeType !== 'text' && treeType !== NodeType.Link && treeType !== NodeType.CodeBlock) {
                 const subTree = this._parseText((treeItem.value as any).text || ' ');
 
                 const before = (treeItem.value as any).before;
@@ -265,6 +287,7 @@ class MarkdownToNodes {
 
         const node = new CustomNode();
         this._convertTreeNodesToCustomNodes(treeNodes, node);
+        this._restoreCodeSpans(node);
 
         return node;
     }
@@ -276,7 +299,7 @@ class MarkdownToNodes {
     }
 
     convert(md: string): CustomNode {
-        return this._convertToCustomNodes(this._separateBlockLines(md) + '\n');
+        return this._convertToCustomNodes(this._separateBlockLines(this._protectCodeSpans(md)) + '\n');
     }
 }
 

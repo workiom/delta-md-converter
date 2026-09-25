@@ -122,7 +122,7 @@ class MdToHtml {
                 const codeBlockLineCounts = content.split('\n').length - 2;
                 const codeBlockPostfix = Array(codeBlockLineCounts + 1).join('\n');
 
-                return `<pre>${subCodeBlockContent}${codeBlockPostfix}</pre>`;
+                return `<pre>${subCodeBlockContent ? subCodeBlockContent : this._escapeHtml(content)}${codeBlockPostfix}</pre>`;
 
             case NodeType.List:
                 const listTag = options.list === 'ordered' ? 'ol' : 'ul';

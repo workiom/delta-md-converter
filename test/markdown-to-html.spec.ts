@@ -258,6 +258,12 @@ describe('Delta to HTML', () => {
         expect(html).toEqual("<ul><li>Ask <span class=\"mention-item mention-type\">@User 1</span> please</li></ul>");
     });
 
+    test('Formatting inside code stays literal', () => {
+        const html = mdToHtmlConverter.markdownToHtml("`a _b_ **c**`\n\n    **x** _y_");
+
+        expect(html).toEqual("<code>a _b_ **c**</code><br><pre>**x** _y_</pre>");
+    });
+
     // Customer case
     test('Multiline Inside Blockquote', () => {
         const html = mdToHtmlConverter.markdownToHtml("[Google](https://google.com) ,\n\n_[Google 2 ,](https://google.com)_\n\n_[Google 3](https://google.com)");
