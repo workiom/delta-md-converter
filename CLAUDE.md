@@ -21,7 +21,7 @@ Gotchas:
 
 ## Architecture
 
-`src/index.ts` has one default export: `{ deltaToMarkdown, markdownToDelta, markdownToHtml }`. The mention config types aren't re-exported. `IDeltaMention` lives in `src/delta-to-nodes.ts` and `IStringMention` in `src/markdown-to-nodes.ts`.
+`src/index.ts` has one default export: `{ deltaToMarkdown, markdownToDelta, markdownToHtml }`, plus type exports for the mention configs. `IDeltaMention` lives in `src/delta-to-nodes.ts` and `IStringMention` in `src/markdown-to-nodes.ts`.
 
 Every conversion goes through `CustomNode` (`src/utils/Node.ts`). It is a doubly linked list (`previousNode`/`nextNode`). Each node has:
 - `type`: a `NodeType`, or `null`/`undefined` for plain text.
