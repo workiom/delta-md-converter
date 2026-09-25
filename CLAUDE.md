@@ -16,7 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Gotchas:
 - Run Jest through `npm test`, which sets `NODE_OPTIONS=--experimental-vm-modules`. Bare `npx jest` fails with `SyntaxError: Cannot use import statement outside a module`.
-- Compiled `lib/` uses extensionless relative imports. Plain Node ESM can't load them (`Cannot find module .../lib/delta-to-markdown`), so `lib/` works only through a bundler. Verify behavior with tests, not by running `lib/`.
+- Relative imports in `src/` must end in `.js` (`./utils/Node.js`) so compiled `lib/` loads in plain Node ESM. Jest's `moduleNameMapper` strips the extension. `test/package.spec.ts` compiles into `node_modules/.cache` and imports the result with Node to guard this.
 - In this repo, `npm ci` under npm 11 re-resolves transitive deps and rewrites `package-lock.json`. Revert that churn unless you mean to update the lockfile.
 
 ## Architecture

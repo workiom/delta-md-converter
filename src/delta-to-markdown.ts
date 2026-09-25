@@ -1,5 +1,5 @@
-import { CustomNode, NodeType } from './utils/Node';
-import { IDeltaMention, deltaToNodes } from './delta-to-nodes';
+import { CustomNode, NodeType } from './utils/Node.js';
+import { IDeltaMention, deltaToNodes } from './delta-to-nodes.js';
 
 export enum ListType {
     Bullet = 'bullet',

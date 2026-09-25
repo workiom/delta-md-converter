@@ -1,5 +1,5 @@
-import { CustomNode, NodeType } from './utils/Node';
-import { IStringMention, markdownToNodes } from './markdown-to-nodes';
+import { CustomNode, NodeType } from './utils/Node.js';
+import { IStringMention, markdownToNodes } from './markdown-to-nodes.js';
 
 export enum ListType {
     Bullet = 'bullet',

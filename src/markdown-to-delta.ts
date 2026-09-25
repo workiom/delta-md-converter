@@ -1,5 +1,5 @@
-import { IStringMention, markdownToNodes } from "./markdown-to-nodes";
-import { CustomNode, NodeType } from "./utils/Node";
+import { IStringMention, markdownToNodes } from "./markdown-to-nodes.js";
+import { CustomNode, NodeType } from "./utils/Node.js";
 
 class MarkdownToDelta {
 

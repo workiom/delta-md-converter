@@ -1,4 +1,4 @@
-import { CustomNode, NodeType } from './utils/Node';
+import { CustomNode, NodeType } from './utils/Node.js';
 
 export enum ListType {
     Bullet = 'bullet',

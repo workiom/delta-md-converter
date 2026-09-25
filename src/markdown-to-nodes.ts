@@ -1,4 +1,4 @@
-import { CustomNode, NodeType } from "./utils/Node";
+import { CustomNode, NodeType } from "./utils/Node.js";
 import { Parser } from 'simple-text-parser';
 
 export interface IStringMention {
