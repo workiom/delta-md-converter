@@ -1063,4 +1063,30 @@ describe('Delta to Markdown', () => {
 
         expect(md).toEqual("[`x`](http://link.com) **[`y`](http://link.com)**");
     });
+    test('Ordered list numbering restarts after plain paragraph', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            { insert: "a" },
+            { insert: "\n", attributes: { list: "ordered" } },
+            { insert: "b" },
+            { insert: "\n", attributes: { list: "ordered" } },
+            { insert: "para\n" },
+            { insert: "c" },
+            { insert: "\n", attributes: { list: "ordered" } },
+        ]);
+
+        expect(md).toEqual("1. a\n\n2. b\n\npara\n\n1. c");
+    });
+
+    test('Ordered list numbering restarts after bold paragraph', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            { insert: "a" },
+            { insert: "\n", attributes: { list: "ordered" } },
+            { insert: "para", attributes: { bold: true } },
+            { insert: "\n" },
+            { insert: "c" },
+            { insert: "\n", attributes: { list: "ordered" } },
+        ]);
+
+        expect(md).toEqual("1. a\n\n**para**\n\n1. c");
+    });
 });

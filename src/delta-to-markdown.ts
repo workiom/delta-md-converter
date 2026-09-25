@@ -75,7 +75,9 @@ class DeltaToMarkdown {
     }
 
     private _getNodeText(node: CustomNode | null, content: string, options: any, skipResettingList = false): string {
-        if (node?.type && node?.type !== NodeType.List && !skipResettingList) {
+        // Any content outside a list ends it, so the next list starts numbering again
+        const hasContent = node?.type != null || content.trim() !== '';
+        if (node && node.type !== NodeType.List && hasContent && !skipResettingList) {
             this._listLevel = {};
         }
 
