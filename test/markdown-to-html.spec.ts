@@ -207,6 +207,12 @@ describe('Delta to HTML', () => {
         expect(html).toEqual("Ask _U_9999 please");
     });
 
+    test('List items on consecutive lines', () => {
+        const html = mdToHtmlConverter.markdownToHtml("* a\n* b\n* c");
+
+        expect(html).toEqual("<ul><li>a</li><li>b</li><li>c</li></ul>");
+    });
+
     // Customer case
     test('Multiline Inside Blockquote', () => {
         const html = mdToHtmlConverter.markdownToHtml("[Google](https://google.com) ,\n\n_[Google 2 ,](https://google.com)_\n\n_[Google 3](https://google.com)");

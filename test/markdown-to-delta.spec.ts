@@ -1139,6 +1139,88 @@ describe('Markdown to Delta', () => {
         ]);
     });
 
+    // Block lines separated by a single new line
+    test('Bullet list items on consecutive lines', () => {
+        const ops = deltaToMdConverter.markdownToDelta("* a\n* b\n* c");
+
+        expect(ops).toStrictEqual([
+            { insert: "a" },
+            { insert: "\n", attributes: { list: "bullet" } },
+            { insert: "b" },
+            { insert: "\n", attributes: { list: "bullet" } },
+            { insert: "c" },
+            { insert: "\n", attributes: { list: "bullet" } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Ordered list items on consecutive lines', () => {
+        const ops = deltaToMdConverter.markdownToDelta("1. a\n2. b\n3. c");
+
+        expect(ops).toStrictEqual([
+            { insert: "a" },
+            { insert: "\n", attributes: { list: "ordered" } },
+            { insert: "b" },
+            { insert: "\n", attributes: { list: "ordered" } },
+            { insert: "c" },
+            { insert: "\n", attributes: { list: "ordered" } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Blockquote lines on consecutive lines', () => {
+        const ops = deltaToMdConverter.markdownToDelta("> a\n> b\n> c");
+
+        expect(ops).toStrictEqual([
+            { insert: "a" },
+            { insert: "\n", attributes: { blockquote: true } },
+            { insert: "b" },
+            { insert: "\n", attributes: { blockquote: true } },
+            { insert: "c" },
+            { insert: "\n", attributes: { blockquote: true } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Code block lines on consecutive lines', () => {
+        const ops = deltaToMdConverter.markdownToDelta("    a\n    b\n    c");
+
+        expect(ops).toStrictEqual([
+            { insert: "a" },
+            { insert: "\n", attributes: { "code-block": true } },
+            { insert: "b" },
+            { insert: "\n", attributes: { "code-block": true } },
+            { insert: "c" },
+            { insert: "\n", attributes: { "code-block": true } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Header 3 lines on consecutive lines', () => {
+        const ops = deltaToMdConverter.markdownToDelta("### A\n### B\n### C");
+
+        expect(ops).toStrictEqual([
+            { insert: "A" },
+            { insert: "\n", attributes: { header: 3 } },
+            { insert: "B" },
+            { insert: "\n", attributes: { header: 3 } },
+            { insert: "C" },
+            { insert: "\n", attributes: { header: 3 } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Text line directly before list keeps its new line', () => {
+        const ops = deltaToMdConverter.markdownToDelta("intro\n* a");
+
+        expect(ops).toStrictEqual([
+            { insert: "intro\n" },
+            { insert: "a" },
+            { insert: "\n", attributes: { list: "bullet" } },
+            { insert: "\n" },
+        ]);
+    });
+
     // Customer case #1
     test('Invalid links styles', () => {
         const ops = deltaToMdConverter.markdownToDelta("[Google](https://google.com) ,_\n\n[Google 2](https://google.com) ,_\n\n_[Google 3]https://google.com)");

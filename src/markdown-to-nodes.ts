@@ -263,8 +263,14 @@ class MarkdownToNodes {
         return node;
     }
 
+    // Block rules consume the new line around each block, so a block line right after
+    // another line needs a blank line before it, like the markdown generated from delta
+    private _separateBlockLines(md: string): string {
+        return md.replace(/([^\n])\n(?=\#+\s| *\*(?!\*) | *[0-9]+\. |\>\s|    )/g, '$1\n\n');
+    }
+
     convert(md: string): CustomNode {
-        return this._convertToCustomNodes(md + '\n');
+        return this._convertToCustomNodes(this._separateBlockLines(md) + '\n');
     }
 }
 
