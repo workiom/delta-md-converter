@@ -213,6 +213,30 @@ describe('Delta to HTML', () => {
         expect(html).toEqual("<ul><li>a</li><li>b</li><li>c</li></ul>");
     });
 
+    test('Ordered list nested inside bullet list at the end', () => {
+        const html = mdToHtmlConverter.markdownToHtml("* a\n\n    1. b");
+
+        expect(html).toEqual("<ul><li>a<ol><li>b</li></ol></li></ul>");
+    });
+
+    test('Bullet list after ordered list at the same level', () => {
+        const html = mdToHtmlConverter.markdownToHtml("1. a\n\n* b");
+
+        expect(html).toEqual("<ol><li>a</li></ol><ul><li>b</li></ul>");
+    });
+
+    test('List type change inside nested level', () => {
+        const html = mdToHtmlConverter.markdownToHtml("* a\n\n    1. b\n\n    * c");
+
+        expect(html).toEqual("<ul><li>a<ol><li>b</li></ol><ul><li>c</li></ul></li></ul>");
+    });
+
+    test('Deep mixed list closes every level', () => {
+        const html = mdToHtmlConverter.markdownToHtml("1. a\n\n    * b\n\n        1. c\n\n2. d\n\nText");
+
+        expect(html).toEqual("<ol><li>a<ul><li>b<ol><li>c</li></ol></li></ul></li><li>d</li></ol><br>Text");
+    });
+
     // Customer case
     test('Multiline Inside Blockquote', () => {
         const html = mdToHtmlConverter.markdownToHtml("[Google](https://google.com) ,\n\n_[Google 2 ,](https://google.com)_\n\n_[Google 3](https://google.com)");

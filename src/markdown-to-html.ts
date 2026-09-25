@@ -13,7 +13,7 @@ class MdToHtml {
         'h3',
     ]
 
-    private _listLevel: any = {};
+    private _listStack: { tag: string, indent: number }[] = [];
 
     constructor(public mentions?: IStringMention[]) { }
 
@@ -39,17 +39,13 @@ class MdToHtml {
         return `<${heading}>${content}</${heading}>`;
     }
 
-    private _getNodeHtml(node: CustomNode | null, content: string, options: any, skipResettingList = false): string {
-        if (node?.type && node?.type !== NodeType.List && !skipResettingList) {
-            this._listLevel = {};
-        }
-
+    private _getNodeHtml(node: CustomNode | null, content: string, options: any): string {
         switch (node?.type) {
             case NodeType.Bold:
                 let subBoldContent = '';
                 const subBoldNodes = node?.children || [];
                 for (const subNode of subBoldNodes) {
-                    subBoldContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options, true);
+                    subBoldContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options);
                 }
 
                 return `<b>${subBoldContent ? subBoldContent : this._escapeHtml(content)}</b>`;
@@ -58,7 +54,7 @@ class MdToHtml {
                 let subItalicContent = '';
                 const subItalicNodes = node?.children || [];
                 for (const subNode of subItalicNodes) {
-                    subItalicContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options, true);
+                    subItalicContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options);
                 }
 
                 return `<i>${subItalicContent ? subItalicContent : this._escapeHtml(content)}</i>`;
@@ -67,7 +63,7 @@ class MdToHtml {
                 let subStrikeContent = '';
                 const subStrikeNodes = node?.children || [];
                 for (const subNode of subStrikeNodes) {
-                    subStrikeContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options, true);
+                    subStrikeContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options);
                 }
 
                 return `<s>${subStrikeContent ? subStrikeContent : this._escapeHtml(content)}</s>`;
@@ -76,7 +72,7 @@ class MdToHtml {
                 let subCodeContent = '';
                 const subCodeNodes = node?.children || [];
                 for (const subNode of subCodeNodes) {
-                    subCodeContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options, true);
+                    subCodeContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options);
                 }
 
                 return `<code>${subCodeContent ? subCodeContent : this._escapeHtml(content)}</code>`;
@@ -85,7 +81,7 @@ class MdToHtml {
                 let subHtmlContent = '';
                 const subHtmlNodes = node?.children || [];
                 for (const subNode of subHtmlNodes) {
-                    subHtmlContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options, true);
+                    subHtmlContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options);
                 }
 
                 const linkLabel = subHtmlContent ? subHtmlContent : this._escapeHtml(content);
@@ -99,7 +95,7 @@ class MdToHtml {
                 let subHeaderContent = '';
                 const subHeaderNodes = node?.children || [];
                 for (const subNode of subHeaderNodes) {
-                    subHeaderContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options, true);
+                    subHeaderContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options);
                 }
 
                 return this._getHeaderFormatting(options.header, subHeaderContent);
@@ -108,7 +104,7 @@ class MdToHtml {
                 let subBlockQuoteContent = '';
                 const subBlockQuoteNodes = node?.children || [];
                 for (const subNode of subBlockQuoteNodes) {
-                    subBlockQuoteContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options, true);
+                    subBlockQuoteContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options);
                 }
 
                 const blockquoteLineCounts = content.split('\n').length - 2;
@@ -120,7 +116,7 @@ class MdToHtml {
                 let subCodeBlockContent = '';
                 const subCodeBlockNodes = node?.children || [];
                 for (const subNode of subCodeBlockNodes) {
-                    subCodeBlockContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options, true);
+                    subCodeBlockContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options);
                 }
 
                 const codeBlockLineCounts = content.split('\n').length - 2;
@@ -129,65 +125,34 @@ class MdToHtml {
                 return `<pre>${subCodeBlockContent}${codeBlockPostfix}</pre>`;
 
             case NodeType.List:
-                const listType = options.list;
+                const listTag = options.list === 'ordered' ? 'ol' : 'ul';
                 const indentCount = options.indent ? options.indent : 0;
 
-                let listTypeTag = 'ul';
-                if (listType === 'ordered') {
-                    listTypeTag = 'ol';
-                }
-
                 let listOutput = '';
-                if (!this._listLevel[listType]) {
-                    this._listLevel[listType] = {};
+
+                // Close deeper levels, and the same level when list type changes
+                let openList = this._listStack[this._listStack.length - 1];
+                while (openList && (openList.indent > indentCount || (openList.indent === indentCount && openList.tag !== listTag))) {
+                    listOutput += `</li></${openList.tag}>`;
+                    this._listStack.pop();
+                    openList = this._listStack[this._listStack.length - 1];
                 }
 
-                if (this._listLevel['ordered'] && this._listLevel['ordered'][indentCount + 1]) {
-                    listOutput += `</ol></li>`;
-                    delete this._listLevel['ordered'][indentCount + 1];
-                } else if (this._listLevel['bullet'] && this._listLevel['bullet'][indentCount + 1]) {
-                    listOutput += `</ul></li>`;
-                    delete this._listLevel['bullet'][indentCount + 1];
+                if (openList && openList.indent === indentCount) {
+                    listOutput += '</li><li>';
+                } else {
+                    listOutput += `<${listTag}><li>`;
+                    this._listStack.push({ tag: listTag, indent: indentCount });
                 }
 
-                if (!this._listLevel[listType][indentCount]) {
-                    if (indentCount > 0) {
-                        listOutput += '<li>';
-                    }
-
-                    listOutput += `<${listTypeTag}>`;
-                    this._listLevel[listType][indentCount] = 0;
-                }
-
-                listOutput += '<li>';
-                this._listLevel[listType][indentCount]++;
-
-                let subListContent = '';
                 const subListNodes = node?.children || [];
                 for (const subNode of subListNodes) {
-                    subListContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options, true);
+                    listOutput += this._getNodeHtml(subNode, subNode.textContent, subNode.options);
                 }
 
-                listOutput += subListContent;
-                listOutput += '</li>';
-
                 if (node?.nextNode?.type !== NodeType.List) {
-                    listOutput += `</${listTypeTag}>`;
-
-                    let bullet = this._listLevel['bullet'];
-                    if (bullet) {
-                        for (let i = 0; i < Object.keys(bullet).length - 1; i++) {
-                            listOutput += `</li></ul>`;
-                        }
-                        delete this._listLevel['bullet'];
-                    }
-
-                    let ordered = this._listLevel['ordered'];
-                    if (ordered) {
-                        for (let i = 0; i < Object.keys(ordered).length - 1; i++) {
-                            listOutput += `</li></ol>`;
-                        }
-                        delete this._listLevel['ordered'];
+                    while (this._listStack.length > 0) {
+                        listOutput += `</li></${this._listStack.pop()!.tag}>`;
                     }
                 }
 
@@ -230,11 +195,6 @@ class MdToHtml {
             .replace(/<\/h1><br>/gi, '</h1>')
             .replace(/<\/h2><br>/gi, '</h2>')
             .replace(/<\/h3><br>/gi, '</h3>');
-
-        // List
-        html = html
-            .replace(/<\/li><li><ul>/gi, '<ul>')
-            .replace(/<\/li><li><ol>/gi, '<ol>');
 
         // Trim last new line
         if (html.endsWith('<br>')) {
