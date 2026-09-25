@@ -31,6 +31,17 @@ class DeltaToMarkdown {
         }
     }
 
+    private _getInlineFormatting(marker: string, content: string): string {
+        // Markers around whitespace only would make empty formatting like ****
+        if (content.trim() === '') {
+            return content;
+        }
+
+        const leadingSpaces = content.match(/^\s*/)?.[0] || '';
+        const trailingSpaces = content.match(/\s*$/)?.[0] || '';
+        return `${leadingSpaces}${marker}${content.trim()}${marker}${trailingSpaces}`;
+    }
+
     private _getListFormatting(listType: ListType, indent: number, numeric: number, content: string): string {
         return `${Array(indent + 1).join('    ')}${listType === ListType.Bullet ? '*' : numeric + '.'} ${content}`;
     }
@@ -76,10 +87,7 @@ class DeltaToMarkdown {
                     subBoldContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
                 }
 
-                let newBoldText = subBoldContent ? subBoldContent : content;
-                const boldLeadingSpaces = newBoldText.match(/^\s*/)?.[0] || '';
-                const boldTrailingSpaces = newBoldText.match(/\s*$/)?.[0] || '';
-                return `${boldLeadingSpaces}**${newBoldText.trim()}**${boldTrailingSpaces}`;
+                return this._getInlineFormatting('**', subBoldContent ? subBoldContent : content);
 
             case NodeType.Italic:
                 let subItalicContent = '';
@@ -88,10 +96,7 @@ class DeltaToMarkdown {
                     subItalicContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
                 }
 
-                let newItalicText = subItalicContent ? subItalicContent : content;
-                const italicLeadingSpaces = newItalicText.match(/^\s*/)?.[0] || '';
-                const italicTrailingSpaces = newItalicText.match(/\s*$/)?.[0] || '';
-                return `${italicLeadingSpaces}_${newItalicText.trim()}_${italicTrailingSpaces}`;
+                return this._getInlineFormatting('_', subItalicContent ? subItalicContent : content);
 
             case NodeType.Strike:
                 let subStrikeContent = '';
@@ -100,10 +105,7 @@ class DeltaToMarkdown {
                     subStrikeContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
                 }
 
-                let newStrikeText = subStrikeContent ? subStrikeContent : content;
-                const strikeLeadingSpaces = newStrikeText.match(/^\s*/)?.[0] || '';
-                const strikeTrailingSpaces = newStrikeText.match(/\s*$/)?.[0] || '';
-                return `${strikeLeadingSpaces}~~${newStrikeText.trim()}~~${strikeTrailingSpaces}`;
+                return this._getInlineFormatting('~~', subStrikeContent ? subStrikeContent : content);
 
             case NodeType.Code:
                 let subCodeContent = '';
@@ -111,10 +113,7 @@ class DeltaToMarkdown {
                 for (const subNode of subCodeNodes) {
                     subCodeContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
                 }
-                let newCodeText = subCodeContent ? subCodeContent : content;
-                const codeLeadingSpaces = newCodeText.match(/^\s*/)?.[0] || '';
-                const codeTrailingSpaces = newCodeText.match(/\s*$/)?.[0] || '';
-                return `${codeLeadingSpaces}\`${newCodeText.trim()}\`${codeTrailingSpaces}`;
+                return this._getInlineFormatting('`', subCodeContent ? subCodeContent : content);
 
             case NodeType.Link:
                 return `[${content}](${options.link})`;

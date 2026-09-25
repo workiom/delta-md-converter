@@ -1038,4 +1038,19 @@ describe('Delta to Markdown', () => {
 
         expect(md).toEqual("[Google](https://google.com) ,\n\n_[Google 2 ,](https://google.com)_\n\n_[Google 3]https://google.com)");
     });
+    test('Whitespace only formatting stays plain text', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            { insert: "a" },
+            { insert: " ", attributes: { bold: true } },
+            { insert: "b" },
+            { insert: " ", attributes: { italic: true } },
+            { insert: "c" },
+            { insert: " ", attributes: { strike: true } },
+            { insert: "d" },
+            { insert: " ", attributes: { code: true } },
+            { insert: "e\n" },
+        ]);
+
+        expect(md).toEqual("a b c d e");
+    });
 });
