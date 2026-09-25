@@ -116,7 +116,13 @@ class DeltaToMarkdown {
                 return this._getInlineFormatting('`', subCodeContent ? subCodeContent : content);
 
             case NodeType.Link:
-                return `[${content}](${options.link})`;
+                let subLinkContent = '';
+                const subLinkNodes = node?.children || [];
+                for (const subNode of subLinkNodes) {
+                    subLinkContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
+                }
+
+                return `[${subLinkContent ? subLinkContent : content}](${options.link})`;
 
             case NodeType.Header:
                 let subHeaderContent = '';

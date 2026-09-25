@@ -1053,4 +1053,14 @@ describe('Delta to Markdown', () => {
 
         expect(md).toEqual("a b c d e");
     });
+    test('Code inside link keeps link label', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            { insert: "x", attributes: { link: "http://link.com", code: true } },
+            { insert: " " },
+            { insert: "y", attributes: { bold: true, link: "http://link.com", code: true } },
+            { insert: "\n" },
+        ]);
+
+        expect(md).toEqual("[`x`](http://link.com) **[`y`](http://link.com)**");
+    });
 });
