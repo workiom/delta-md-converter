@@ -17,6 +17,22 @@ class MdToHtml {
 
     constructor(public mentions?: IStringMention[]) { }
 
+    private readonly _SAFE_URL_PROTOCOLS = ['http', 'https', 'mailto', 'tel', 'ftp'];
+
+    private _escapeHtml(text: string): string {
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    private _isSafeUrl(url: string): boolean {
+        const protocol = url.trim().match(/^([a-z][a-z0-9+.-]*):/i);
+
+        return !protocol || this._SAFE_URL_PROTOCOLS.includes(protocol[1].toLowerCase());
+    }
+
     private _getHeaderFormatting(level: number, content: string): string {
         const heading = this._HEADER_CHARS[level - 1];
 
@@ -36,7 +52,7 @@ class MdToHtml {
                     subBoldContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options, true);
                 }
 
-                return `<b>${subBoldContent ? subBoldContent : content}</b>`;
+                return `<b>${subBoldContent ? subBoldContent : this._escapeHtml(content)}</b>`;
 
             case NodeType.Italic:
                 let subItalicContent = '';
@@ -45,7 +61,7 @@ class MdToHtml {
                     subItalicContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options, true);
                 }
 
-                return `<i>${subItalicContent ? subItalicContent : content}</i>`;
+                return `<i>${subItalicContent ? subItalicContent : this._escapeHtml(content)}</i>`;
 
             case NodeType.Strike:
                 let subStrikeContent = '';
@@ -54,7 +70,7 @@ class MdToHtml {
                     subStrikeContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options, true);
                 }
 
-                return `<s>${subStrikeContent ? subStrikeContent : content}</s>`;
+                return `<s>${subStrikeContent ? subStrikeContent : this._escapeHtml(content)}</s>`;
 
             case NodeType.Code:
                 let subCodeContent = '';
@@ -63,7 +79,7 @@ class MdToHtml {
                     subCodeContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options, true);
                 }
 
-                return `<code>${subCodeContent ? subCodeContent : content}</code>`;
+                return `<code>${subCodeContent ? subCodeContent : this._escapeHtml(content)}</code>`;
 
             case NodeType.Link:
                 let subHtmlContent = '';
@@ -72,7 +88,12 @@ class MdToHtml {
                     subHtmlContent += this._getNodeHtml(subNode, subNode.textContent, subNode.options, true);
                 }
 
-                return `<a href="${options.link}" target="_blank">${subHtmlContent ? subHtmlContent : content}</a>`;
+                const linkLabel = subHtmlContent ? subHtmlContent : this._escapeHtml(content);
+                if (!this._isSafeUrl(options.link)) {
+                    return linkLabel;
+                }
+
+                return `<a href="${this._escapeHtml(options.link)}" target="_blank">${linkLabel}</a>`;
 
             case NodeType.Header:
                 let subHeaderContent = '';
@@ -174,7 +195,9 @@ class MdToHtml {
 
             default:
                 if (node?.options?.type) {
-                    return `<span class="mention-item ${node.options.type}-type">${node.options.denotationChar}${node.options.value}</span>`;
+                    const mentionType = this._escapeHtml(node.options.type);
+                    const mentionText = this._escapeHtml(`${node.options.denotationChar}${node.options.value}`);
+                    return `<span class="mention-item ${mentionType}-type">${mentionText}</span>`;
                 }
 
                 const removeNextLine = node?.previousNode && node.previousNode.type === NodeType.Blockquote;
@@ -183,7 +206,7 @@ class MdToHtml {
                     return '';
                 }
 
-                return content.replace(/\n\n/gi, '<br>');
+                return this._escapeHtml(content).replace(/\n\n/gi, '<br>');
         }
     }
 
