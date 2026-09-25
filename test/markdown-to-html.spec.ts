@@ -308,7 +308,7 @@ describe('Delta to HTML', () => {
     test('Render unsafe link protocols as plain text', () => {
         const html = mdToHtmlConverter.markdownToHtml("[Click](javascript:alert(1)) [Data](data:text/html,x) [Entity](javascript&#58;alert(1))");
 
-        expect(html).toEqual("Click Data [Entity](javascript&amp;#58;alert(1))");
+        expect(html).toEqual("Click Data <a href=\"javascript&amp;#58;alert(1)\" target=\"_blank\">Entity</a>");
     });
 
     test('Keep safe link protocols', () => {

@@ -1393,6 +1393,15 @@ describe('Markdown to Delta', () => {
         ]);
     });
 
+    test('Link url with semicolon, star, apostrophe and dollar', () => {
+        const ops = deltaToMdConverter.markdownToDelta("[a](http://link.com/a;b*c'd$e)");
+
+        expect(ops).toStrictEqual([
+            { insert: "a", attributes: { link: "http://link.com/a;b*c'd$e" } },
+            { insert: "\n" },
+        ]);
+    });
+
     // Customer case #1
     test('Invalid links styles', () => {
         const ops = deltaToMdConverter.markdownToDelta("[Google](https://google.com) ,_\n\n[Google 2](https://google.com) ,_\n\n_[Google 3]https://google.com)");

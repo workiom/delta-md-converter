@@ -98,7 +98,7 @@ class MarkdownToNodes {
             return { type: NodeType.Strike, text: tag, value: {text: cleanTag} };
         });
         // Md Link
-        parser.addRule(/\[(.*?)\]\(([-a-zA-Z0-9@:%_\+.~!,#?&\/\(\)=]*)\)/gi, (tag, linkLabel, linkUrl): any => {
+        parser.addRule(/\[(.*?)\]\(([-a-zA-Z0-9@:%_\+.~!,#?&\/\(\)=;\*'$]*)\)/gi, (tag, linkLabel, linkUrl): any => {
             return { type: NodeType.Link, text: tag, value: {text: linkLabel, options: {link: linkUrl}} };
         });
         // Link
