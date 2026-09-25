@@ -14,16 +14,24 @@ class MdToHtml {
 
     private readonly _SAFE_URL_PROTOCOLS = ['http', 'https', 'mailto', 'tel', 'ftp'];
 
+    // Existing entities stay as they are, callers may escape the markdown before converting it
     private _escapeHtml(text: string): string {
         return text
-            .replace(/&/g, '&amp;')
+            .replace(/&(?!#[0-9]+;|#x[0-9a-f]+;|[a-z][a-z0-9]*;)/gi, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
     }
 
     private _isSafeUrl(url: string): boolean {
-        const protocol = url.trim().match(/^([a-z][a-z0-9+.-]*):/i);
+        // Browsers decode entities in href and drop tabs and new lines, so check the url they will see
+        const decodedUrl = url
+            .replace(/&#x([0-9a-f]+);?/gi, (tag, code) => String.fromCharCode(parseInt(code, 16)))
+            .replace(/&#([0-9]+);?/g, (tag, code) => String.fromCharCode(parseInt(code, 10)))
+            .replace(/&colon;/gi, ':')
+            .replace(/&(tab|newline);/gi, '')
+            .replace(/[\u0000-\u0020]/g, '');
+        const protocol = decodedUrl.match(/^([a-z][a-z0-9+.-]*):/i);
 
         return !protocol || this._SAFE_URL_PROTOCOLS.includes(protocol[1].toLowerCase());
     }

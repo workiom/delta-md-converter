@@ -308,7 +308,25 @@ describe('Delta to HTML', () => {
     test('Render unsafe link protocols as plain text', () => {
         const html = mdToHtmlConverter.markdownToHtml("[Click](javascript:alert(1)) [Data](data:text/html,x) [Entity](javascript&#58;alert(1))");
 
-        expect(html).toEqual("Click Data <a href=\"javascript&amp;#58;alert(1)\" target=\"_blank\">Entity</a>");
+        expect(html).toEqual("Click Data Entity");
+    });
+
+    test('Keep existing HTML entities without escaping them again', () => {
+        const html = mdToHtmlConverter.markdownToHtml("&lt;b&gt; &nbsp; &#39; &#x27; a & b");
+
+        expect(html).toEqual("&lt;b&gt; &nbsp; &#39; &#x27; a &amp; b");
+    });
+
+    test('Render entity encoded unsafe link protocols as plain text', () => {
+        const html = mdToHtmlConverter.markdownToHtml("[A](javascript&colon;alert(1)) [B](javascript&#x3a;alert(1)) [C](java&#9;script:alert(1))");
+
+        expect(html).toEqual("A B C");
+    });
+
+    test('Keep existing entity in link url', () => {
+        const html = mdToHtmlConverter.markdownToHtml("[Link](http://link.com/?a=1&amp;b=2)");
+
+        expect(html).toEqual("<a href=\"http://link.com/?a=1&amp;b=2\" target=\"_blank\">Link</a>");
     });
 
     test('Keep safe link protocols', () => {
