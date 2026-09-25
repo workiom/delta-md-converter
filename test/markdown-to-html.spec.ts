@@ -192,6 +192,21 @@ describe('Delta to HTML', () => {
         expect(html).toEqual("<span class=\"mention-item mention-type\">@User 1</span> Please ask <span class=\"mention-item mention-type\">@User 2</span> to give you the docs");
     });
 
+    test('Unknown mention value stays as plain text', () => {
+        const mentions: IStringMention[] = [{
+            type: 'mention',
+            reg: /_U_([0-9]+)/gi,
+            denotationChar: '@',
+            values: [{
+                label: 'User 1',
+                value: '5555'
+            }]
+        }];
+        const html = mdToHtmlConverter.markdownToHtml("Ask _U_9999 please", mentions);
+
+        expect(html).toEqual("Ask _U_9999 please");
+    });
+
     // Customer case
     test('Multiline Inside Blockquote', () => {
         const html = mdToHtmlConverter.markdownToHtml("[Google](https://google.com) ,\n\n_[Google 2 ,](https://google.com)_\n\n_[Google 3](https://google.com)");

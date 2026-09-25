@@ -139,9 +139,21 @@ class MarkdownToNodes {
         return newTypes;
     }
 
+    private _findMention(treeItem: any): { mention: IStringMention, value: { label: string; value: string; } } | null {
+        const mention = this.mentions?.find(m => m.type === treeItem.value.type);
+        const value = mention?.values.find(mv => mv.value.toString() === treeItem.value.args[0].toString());
+
+        return mention && value ? { mention, value } : null;
+    }
+
     private _convertTreeNodesToCustomNodes(treeNodes: any, previousNode: CustomNode, types: NodeType[] = [], subItem = false): CustomNode {
         let lastNode = previousNode;
-        for (const treeItem of treeNodes) {
+        for (let treeItem of treeNodes) {
+            // Unknown mention values stay as the original text
+            if (treeItem.type === NodeType.Mention && !this._findMention(treeItem)) {
+                treeItem = { type: 'text', text: treeItem.text, subTree: [] };
+            }
+
             if (treeItem.type === 'text' || treeItem.type === NodeType.Link) {
                 if (treeItem.type === 'text' && lastNode.textContent === '\n' && lastNode.textContent === treeItem.text) {
                     continue;
@@ -180,25 +192,14 @@ class MarkdownToNodes {
             } else if (treeItem.type === NodeType.Mention) {
                 const node = new CustomNode();
                 node.type = NodeType.Mention;
-                const mention = this.mentions?.find(m => m.type === treeItem.value.type);
-                const mValue = mention?.values.find(mv => mv.value.toString() === treeItem.value.args[0].toString());
-                if (mention && mValue) {
-                    node.options = {
-                        "index": "0",
-                        "denotationChar": mention.denotationChar,
-                        "value": mValue.label,
-                        "id": mValue.value,
-                        "type": treeItem.value.type,
-                    };
-                } else {
-                    node.options = {
-                        "index": "0",
-                        "denotationChar": mention?.denotationChar,
-                        "value": '',
-                        "id": treeItem.value.userId,
-                        "type": 'mention',
-                    };
-                }
+                const { mention, value } = this._findMention(treeItem)!;
+                node.options = {
+                    "index": "0",
+                    "denotationChar": mention.denotationChar,
+                    "value": value.label,
+                    "id": value.value,
+                    "type": treeItem.value.type,
+                };
 
                 node.previousNode = lastNode;
                 lastNode.nextNode = node;

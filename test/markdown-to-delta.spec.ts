@@ -1089,6 +1089,56 @@ describe('Markdown to Delta', () => {
         ]);
     });
 
+    test('Unknown mention value stays as plain text', () => {
+        const mentions: IStringMention[] = [{
+            type: 'mention',
+            reg: /_U_([0-9]+)/gi,
+            denotationChar: '@',
+            values: [{
+                label: 'User Name',
+                value: '1234'
+            }]
+        }];
+        const ops = deltaToMdConverter.markdownToDelta("User _U_9999 Some Value", mentions);
+
+        expect(ops).toStrictEqual([
+            {
+                "insert": "User "
+            },
+            {
+                "insert": "_U_9999"
+            },
+            {
+                insert: " Some Value\n",
+            },
+        ]);
+    });
+
+    test('Unknown value of custom mention type stays as plain text', () => {
+        const mentions: IStringMention[] = [{
+            type: 'field',
+            reg: /_F_([0-9]+)/gi,
+            denotationChar: '',
+            values: [{
+                label: 'Field Name',
+                value: '1234'
+            }]
+        }];
+        const ops = deltaToMdConverter.markdownToDelta("Field _F_9999 Some Value", mentions);
+
+        expect(ops).toStrictEqual([
+            {
+                "insert": "Field "
+            },
+            {
+                "insert": "_F_9999"
+            },
+            {
+                insert: " Some Value\n",
+            },
+        ]);
+    });
+
     // Customer case #1
     test('Invalid links styles', () => {
         const ops = deltaToMdConverter.markdownToDelta("[Google](https://google.com) ,_\n\n[Google 2](https://google.com) ,_\n\n_[Google 3]https://google.com)");
