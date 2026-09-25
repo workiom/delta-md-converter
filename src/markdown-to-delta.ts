@@ -1,5 +1,5 @@
-import { IStringMention, markdownToNodes } from "./markdown-to-nodes";
-import { CustomNode, NodeType } from "./utils/Node";
+import { IStringMention, markdownToNodes } from "./markdown-to-nodes.js";
+import { CustomNode, NodeType } from "./utils/Node.js";
 
 class MarkdownToDelta {
 
@@ -132,12 +132,25 @@ class MarkdownToDelta {
         return content;
     }
 
-    private _canCombine(type: NodeType | null): boolean {
-        if (type === NodeType.List) {
-            return false;
-        }
+    private _getMentionOps(node: CustomNode): any {
+        const options = { ...node.options };
+        const type = options.type;
+        delete options.type;
 
-        return true;
+        return { insert: { [type]: options } };
+    }
+
+    private _canCombine(type: NodeType | null): boolean {
+        switch (type) {
+            case NodeType.List:
+            case NodeType.Header:
+            case NodeType.Blockquote:
+            case NodeType.CodeBlock:
+                return false;
+
+            default:
+                return true;
+        }
     }
 
     private _convertCustomNodesToDelta(firstNode: CustomNode | null): any[] {
@@ -162,6 +175,11 @@ class MarkdownToDelta {
                         ops.push(opsItem);
                     } else {
                         for (const child of lastNode.children) {
+                            if (child.type === NodeType.Mention) {
+                                ops.push(this._getMentionOps(child));
+                                continue;
+                            }
+
                             const attributes = this._getAttributesFromNodeType(child);
                             const text = this._getTextsFromNodeType(child);
 
@@ -190,14 +208,7 @@ class MarkdownToDelta {
                         ops.push(opsItem);
                     }
                 } else if (lastNode.type === NodeType.Mention) {
-                    const options = lastNode.options;
-                    const type = options.type;
-                    delete options.type;
-                    const insertObj = { [type]: options };
-
-                    ops.push({
-                        insert: insertObj
-                    });
+                    ops.push(this._getMentionOps(lastNode));
                 } else {
                     const attributes = this._getAttributesFromNodeType(lastNode);
                     const text = this._getTextsFromNodeType(lastNode);
@@ -278,8 +289,8 @@ class MarkdownToDelta {
             // Change double lines in any text
             opItem.insert = opItem.insert.replace(/\n\n/gi, '\n');
 
-            // Skip new line after list
-            if (opItem.insert.startsWith('\n') && opItem.insert.length > 1 && lastOps?.attributes?.list) {
+            // Skip new line after block
+            if (opItem.insert.startsWith('\n') && opItem.insert.length > 1 && lastOpsWithoutNewLine) {
                 opItem.insert = opItem.insert.substring(1, opItem.insert.length);
             }
 

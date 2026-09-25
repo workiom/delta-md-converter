@@ -77,7 +77,7 @@ describe('Delta to HTML', () => {
     test('Combine Bold And Italic', () => {
         const html = mdToHtmlConverter.markdownToHtml("**Bold** **_Bold & Italic_**");
 
-        expect(html).toEqual("<b>Bold</b> <b><i>Bold & Italic</i></b>");
+        expect(html).toEqual("<b>Bold</b> <b><i>Bold &amp; Italic</i></b>");
     });
 
     test('Combine Italic And Strike', () => {
@@ -95,7 +95,7 @@ describe('Delta to HTML', () => {
     test('Bold & Italic Inside List', () => {
         const html = mdToHtmlConverter.markdownToHtml("* **Bold** **_Bold & Italic_**");
 
-        expect(html).toEqual("<ul><li><b>Bold</b> <b><i>Bold & Italic</i></b></li></ul>");
+        expect(html).toEqual("<ul><li><b>Bold</b> <b><i>Bold &amp; Italic</i></b></li></ul>");
     });
 
     test('Link With Underscore', () => {
@@ -143,7 +143,7 @@ describe('Delta to HTML', () => {
     test('Complex link', () => {
         const html = mdToHtmlConverter.markdownToHtml("[Complex Link](http://link.com/some+(link_with_brackets)+and-continue?id=1&artical=24#Query)\n\n[Google Map Link](https://www.google.com/maps/dir/33.5051595,36.3103176/33.5043544,36.3131017/@33.5047211,36.312464,19z/data=!3m1!4b1!4m2!4m1!3e0?hl=ar)");
 
-        expect(html).toEqual("<a href=\"http://link.com/some+(link_with_brackets)+and-continue?id=1&artical=24#Query\" target=\"_blank\">Complex Link</a><br><a href=\"https://www.google.com/maps/dir/33.5051595,36.3103176/33.5043544,36.3131017/@33.5047211,36.312464,19z/data=!3m1!4b1!4m2!4m1!3e0?hl=ar\" target=\"_blank\">Google Map Link</a>");
+        expect(html).toEqual("<a href=\"http://link.com/some+(link_with_brackets)+and-continue?id=1&amp;artical=24#Query\" target=\"_blank\">Complex Link</a><br><a href=\"https://www.google.com/maps/dir/33.5051595,36.3103176/33.5043544,36.3131017/@33.5047211,36.312464,19z/data=!3m1!4b1!4m2!4m1!3e0?hl=ar\" target=\"_blank\">Google Map Link</a>");
     });
 
     // Mentions And Fields
@@ -192,10 +192,128 @@ describe('Delta to HTML', () => {
         expect(html).toEqual("<span class=\"mention-item mention-type\">@User 1</span> Please ask <span class=\"mention-item mention-type\">@User 2</span> to give you the docs");
     });
 
+    test('Unknown mention value stays as plain text', () => {
+        const mentions: IStringMention[] = [{
+            type: 'mention',
+            reg: /_U_([0-9]+)/gi,
+            denotationChar: '@',
+            values: [{
+                label: 'User 1',
+                value: '5555'
+            }]
+        }];
+        const html = mdToHtmlConverter.markdownToHtml("Ask _U_9999 please", mentions);
+
+        expect(html).toEqual("Ask _U_9999 please");
+    });
+
+    test('List items on consecutive lines', () => {
+        const html = mdToHtmlConverter.markdownToHtml("* a\n* b\n* c");
+
+        expect(html).toEqual("<ul><li>a</li><li>b</li><li>c</li></ul>");
+    });
+
+    test('Ordered list nested inside bullet list at the end', () => {
+        const html = mdToHtmlConverter.markdownToHtml("* a\n\n    1. b");
+
+        expect(html).toEqual("<ul><li>a<ol><li>b</li></ol></li></ul>");
+    });
+
+    test('Bullet list after ordered list at the same level', () => {
+        const html = mdToHtmlConverter.markdownToHtml("1. a\n\n* b");
+
+        expect(html).toEqual("<ol><li>a</li></ol><ul><li>b</li></ul>");
+    });
+
+    test('List type change inside nested level', () => {
+        const html = mdToHtmlConverter.markdownToHtml("* a\n\n    1. b\n\n    * c");
+
+        expect(html).toEqual("<ul><li>a<ol><li>b</li></ol><ul><li>c</li></ul></li></ul>");
+    });
+
+    test('Deep mixed list closes every level', () => {
+        const html = mdToHtmlConverter.markdownToHtml("1. a\n\n    * b\n\n        1. c\n\n2. d\n\nText");
+
+        expect(html).toEqual("<ol><li>a<ul><li>b<ol><li>c</li></ol></li></ul></li><li>d</li></ol><br>Text");
+    });
+
+    test('Bold inside blockquote', () => {
+        const html = mdToHtmlConverter.markdownToHtml("> **Bold** normal");
+
+        expect(html).toEqual("<blockquote><b>Bold</b> normal</blockquote>");
+    });
+
+    test('Mention inside list item', () => {
+        const mentions: IStringMention[] = [{
+            type: 'mention',
+            reg: /_U_([0-9]+)/gi,
+            denotationChar: '@',
+            values: [{
+                label: 'User 1',
+                value: '5555'
+            }]
+        }];
+        const html = mdToHtmlConverter.markdownToHtml("* Ask _U_5555 please", mentions);
+
+        expect(html).toEqual("<ul><li>Ask <span class=\"mention-item mention-type\">@User 1</span> please</li></ul>");
+    });
+
+    test('Formatting inside code stays literal', () => {
+        const html = mdToHtmlConverter.markdownToHtml("`a _b_ **c**`\n\n    **x** _y_");
+
+        expect(html).toEqual("<code>a _b_ **c**</code><br><pre>**x** _y_</pre>");
+    });
+
     // Customer case
     test('Multiline Inside Blockquote', () => {
         const html = mdToHtmlConverter.markdownToHtml("[Google](https://google.com) ,\n\n_[Google 2 ,](https://google.com)_\n\n_[Google 3](https://google.com)");
 
         expect(html).toEqual("<a href=\"https://google.com\" target=\"_blank\">Google</a> ,<br><br><i><a href=\"https://google.com\" target=\"_blank\">Google 2 ,</a></i><br><br>_<a href=\"https://google.com\" target=\"_blank\">Google 3</a>");
+    });
+
+    // HTML escaping
+    test('Escape HTML in plain text', () => {
+        const html = mdToHtmlConverter.markdownToHtml("<img src=x onerror=alert(1)> & \"co\"");
+
+        expect(html).toEqual("&lt;img src=x onerror=alert(1)&gt; &amp; &quot;co&quot;");
+    });
+
+    test('Escape HTML inside formatting', () => {
+        const html = mdToHtmlConverter.markdownToHtml("**<b>** _<i>_ ~~<s>~~ `<code>`\n\n### <h3>\n\n> <q>\n\n* <li>");
+
+        expect(html).toEqual("<b>&lt;b&gt;</b> <i>&lt;i&gt;</i> <s>&lt;s&gt;</s> <code>&lt;code&gt;</code><br><h3>&lt;h3&gt;</h3><blockquote>&lt;q&gt;</blockquote><ul><li>&lt;li&gt;</li></ul>");
+    });
+
+    test('Escape HTML in link label and url', () => {
+        const html = mdToHtmlConverter.markdownToHtml("[<img>](http://link.com/?a=1&b=2)");
+
+        expect(html).toEqual("<a href=\"http://link.com/?a=1&amp;b=2\" target=\"_blank\">&lt;img&gt;</a>");
+    });
+
+    test('Escape HTML in mention label', () => {
+        const mentions: IStringMention[] = [{
+            type: 'mention',
+            reg: /_U_([0-9]+)/gi,
+            denotationChar: '@',
+            values: [{
+                label: '<img src=x onerror=alert(1)>',
+                value: '1234'
+            }]
+        }];
+        const html = mdToHtmlConverter.markdownToHtml("_U_1234", mentions);
+
+        expect(html).toEqual("<span class=\"mention-item mention-type\">@&lt;img src=x onerror=alert(1)&gt;</span>");
+    });
+
+    test('Render unsafe link protocols as plain text', () => {
+        const html = mdToHtmlConverter.markdownToHtml("[Click](javascript:alert(1)) [Data](data:text/html,x) [Entity](javascript&#58;alert(1))");
+
+        expect(html).toEqual("Click Data <a href=\"javascript&amp;#58;alert(1)\" target=\"_blank\">Entity</a>");
+    });
+
+    test('Keep safe link protocols', () => {
+        const html = mdToHtmlConverter.markdownToHtml("[Mail](mailto:a@b.com) [Rel](/path) [Hash](#top)");
+
+        expect(html).toEqual("<a href=\"mailto:a@b.com\" target=\"_blank\">Mail</a> <a href=\"/path\" target=\"_blank\">Rel</a> <a href=\"#top\" target=\"_blank\">Hash</a>");
     });
 });

@@ -1089,6 +1089,349 @@ describe('Markdown to Delta', () => {
         ]);
     });
 
+    test('Unknown mention value stays as plain text', () => {
+        const mentions: IStringMention[] = [{
+            type: 'mention',
+            reg: /_U_([0-9]+)/gi,
+            denotationChar: '@',
+            values: [{
+                label: 'User Name',
+                value: '1234'
+            }]
+        }];
+        const ops = deltaToMdConverter.markdownToDelta("User _U_9999 Some Value", mentions);
+
+        expect(ops).toStrictEqual([
+            {
+                "insert": "User "
+            },
+            {
+                "insert": "_U_9999"
+            },
+            {
+                insert: " Some Value\n",
+            },
+        ]);
+    });
+
+    test('Unknown value of custom mention type stays as plain text', () => {
+        const mentions: IStringMention[] = [{
+            type: 'field',
+            reg: /_F_([0-9]+)/gi,
+            denotationChar: '',
+            values: [{
+                label: 'Field Name',
+                value: '1234'
+            }]
+        }];
+        const ops = deltaToMdConverter.markdownToDelta("Field _F_9999 Some Value", mentions);
+
+        expect(ops).toStrictEqual([
+            {
+                "insert": "Field "
+            },
+            {
+                "insert": "_F_9999"
+            },
+            {
+                insert: " Some Value\n",
+            },
+        ]);
+    });
+
+    // Block lines separated by a single new line
+    test('Bullet list items on consecutive lines', () => {
+        const ops = deltaToMdConverter.markdownToDelta("* a\n* b\n* c");
+
+        expect(ops).toStrictEqual([
+            { insert: "a" },
+            { insert: "\n", attributes: { list: "bullet" } },
+            { insert: "b" },
+            { insert: "\n", attributes: { list: "bullet" } },
+            { insert: "c" },
+            { insert: "\n", attributes: { list: "bullet" } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Ordered list items on consecutive lines', () => {
+        const ops = deltaToMdConverter.markdownToDelta("1. a\n2. b\n3. c");
+
+        expect(ops).toStrictEqual([
+            { insert: "a" },
+            { insert: "\n", attributes: { list: "ordered" } },
+            { insert: "b" },
+            { insert: "\n", attributes: { list: "ordered" } },
+            { insert: "c" },
+            { insert: "\n", attributes: { list: "ordered" } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Blockquote lines on consecutive lines', () => {
+        const ops = deltaToMdConverter.markdownToDelta("> a\n> b\n> c");
+
+        expect(ops).toStrictEqual([
+            { insert: "a" },
+            { insert: "\n", attributes: { blockquote: true } },
+            { insert: "b" },
+            { insert: "\n", attributes: { blockquote: true } },
+            { insert: "c" },
+            { insert: "\n", attributes: { blockquote: true } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Code block lines on consecutive lines', () => {
+        const ops = deltaToMdConverter.markdownToDelta("    a\n    b\n    c");
+
+        expect(ops).toStrictEqual([
+            { insert: "a" },
+            { insert: "\n", attributes: { "code-block": true } },
+            { insert: "b" },
+            { insert: "\n", attributes: { "code-block": true } },
+            { insert: "c" },
+            { insert: "\n", attributes: { "code-block": true } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Header 3 lines on consecutive lines', () => {
+        const ops = deltaToMdConverter.markdownToDelta("### A\n### B\n### C");
+
+        expect(ops).toStrictEqual([
+            { insert: "A" },
+            { insert: "\n", attributes: { header: 3 } },
+            { insert: "B" },
+            { insert: "\n", attributes: { header: 3 } },
+            { insert: "C" },
+            { insert: "\n", attributes: { header: 3 } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Text line directly before list keeps its new line', () => {
+        const ops = deltaToMdConverter.markdownToDelta("intro\n* a");
+
+        expect(ops).toStrictEqual([
+            { insert: "intro\n" },
+            { insert: "a" },
+            { insert: "\n", attributes: { list: "bullet" } },
+            { insert: "\n" },
+        ]);
+    });
+
+    // Inline formatting inside block
+    test('Bold inside header 3 applies only to bold text', () => {
+        const ops = deltaToMdConverter.markdownToDelta("### **Bold** normal");
+
+        expect(ops).toStrictEqual([
+            { insert: "Bold", attributes: { bold: true } },
+            { insert: " normal" },
+            { insert: "\n", attributes: { header: 3 } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Bold inside header 1 applies only to bold text', () => {
+        const ops = deltaToMdConverter.markdownToDelta("**Bold** normal\n===");
+
+        expect(ops).toStrictEqual([
+            { insert: "Bold", attributes: { bold: true } },
+            { insert: " normal" },
+            { insert: "\n", attributes: { header: 1 } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Code inside blockquote applies only to code text', () => {
+        const ops = deltaToMdConverter.markdownToDelta("> `code` normal");
+
+        expect(ops).toStrictEqual([
+            { insert: "code", attributes: { code: true } },
+            { insert: " normal" },
+            { insert: "\n", attributes: { blockquote: true } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Mention inside bullet list item', () => {
+        const mentions: IStringMention[] = [{
+            type: 'mention',
+            reg: /_U_([0-9]+)/gi,
+            denotationChar: '@',
+            values: [{
+                label: 'User Name',
+                value: '1234'
+            }]
+        }];
+        const ops = deltaToMdConverter.markdownToDelta("* Hi _U_1234 there", mentions);
+
+        expect(ops).toStrictEqual([
+            { insert: "Hi " },
+            { insert: { mention: { index: "0", denotationChar: "@", value: "User Name", id: "1234" } } },
+            { insert: " there" },
+            { insert: "\n", attributes: { list: "bullet" } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Mention inside blockquote', () => {
+        const mentions: IStringMention[] = [{
+            type: 'mention',
+            reg: /_U_([0-9]+)/gi,
+            denotationChar: '@',
+            values: [{
+                label: 'User Name',
+                value: '1234'
+            }]
+        }];
+        const ops = deltaToMdConverter.markdownToDelta("> Hi _U_1234 there", mentions);
+
+        expect(ops).toStrictEqual([
+            { insert: "Hi " },
+            { insert: { mention: { index: "0", denotationChar: "@", value: "User Name", id: "1234" } } },
+            { insert: " there" },
+            { insert: "\n", attributes: { blockquote: true } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Mention inside header 3', () => {
+        const mentions: IStringMention[] = [{
+            type: 'mention',
+            reg: /_U_([0-9]+)/gi,
+            denotationChar: '@',
+            values: [{
+                label: 'User Name',
+                value: '1234'
+            }]
+        }];
+        const ops = deltaToMdConverter.markdownToDelta("### Hi _U_1234 there", mentions);
+
+        expect(ops).toStrictEqual([
+            { insert: "Hi " },
+            { insert: { mention: { index: "0", denotationChar: "@", value: "User Name", id: "1234" } } },
+            { insert: " there" },
+            { insert: "\n", attributes: { header: 3 } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Bold inside blockquote', () => {
+        const ops = deltaToMdConverter.markdownToDelta("> **Bold** normal");
+
+        expect(ops).toStrictEqual([
+            { insert: "Bold", attributes: { bold: true } },
+            { insert: " normal" },
+            { insert: "\n", attributes: { blockquote: true } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Italic inside blockquote', () => {
+        const ops = deltaToMdConverter.markdownToDelta("> _Italic_ normal");
+
+        expect(ops).toStrictEqual([
+            { insert: "Italic", attributes: { italic: true } },
+            { insert: " " },
+            { insert: "normal" },
+            { insert: "\n", attributes: { blockquote: true } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Strike inside blockquote', () => {
+        const ops = deltaToMdConverter.markdownToDelta("> ~~Strike~~ normal");
+
+        expect(ops).toStrictEqual([
+            { insert: "Strike", attributes: { strike: true } },
+            { insert: " normal" },
+            { insert: "\n", attributes: { blockquote: true } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Link inside blockquote', () => {
+        const ops = deltaToMdConverter.markdownToDelta("> [Link](http://link.com) normal");
+
+        expect(ops).toStrictEqual([
+            { insert: "Link", attributes: { link: "http://link.com" } },
+            { insert: " normal" },
+            { insert: "\n", attributes: { blockquote: true } },
+            { insert: "\n" },
+        ]);
+    });
+
+    // Code content is literal
+    test('Formatting inside inline code stays literal', () => {
+        const ops = deltaToMdConverter.markdownToDelta("Run `**x** _y_ [l](http://x)` now");
+
+        expect(ops).toStrictEqual([
+            { insert: "Run " },
+            { insert: "**x** _y_ [l](http://x)", attributes: { code: true } },
+            { insert: " now\n" },
+        ]);
+    });
+
+    test('Formatting inside code block stays literal', () => {
+        const ops = deltaToMdConverter.markdownToDelta("    **x** _y_");
+
+        expect(ops).toStrictEqual([
+            { insert: "**x** _y_" },
+            { insert: "\n", attributes: { "code-block": true } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Inline code inside bold', () => {
+        const ops = deltaToMdConverter.markdownToDelta("**`x`**");
+
+        expect(ops).toStrictEqual([
+            { insert: "x", attributes: { bold: true, code: true } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Link url with semicolon, star, apostrophe and dollar', () => {
+        const ops = deltaToMdConverter.markdownToDelta("[a](http://link.com/a;b*c'd$e)");
+
+        expect(ops).toStrictEqual([
+            { insert: "a", attributes: { link: "http://link.com/a;b*c'd$e" } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Paragraph after code block has no extra empty line', () => {
+        const ops = deltaToMdConverter.markdownToDelta("    raw\n\npara");
+
+        expect(ops).toStrictEqual([
+            { insert: "raw" },
+            { insert: "\n", attributes: { "code-block": true } },
+            { insert: "para\n" },
+        ]);
+    });
+
+    test('Paragraph after blockquote has no extra empty line', () => {
+        const ops = deltaToMdConverter.markdownToDelta("> quote\n\npara");
+
+        expect(ops).toStrictEqual([
+            { insert: "quote" },
+            { insert: "\n", attributes: { blockquote: true } },
+            { insert: "para\n" },
+        ]);
+    });
+
+    test('Round trip keeps empty lines after code block stable', () => {
+        const ops = [
+            { insert: "raw" },
+            { insert: "\n", attributes: { "code-block": true } },
+            { insert: "para\n" },
+        ];
+
+        expect(deltaToMdConverter.markdownToDelta(deltaToMdConverter.deltaToMarkdown(ops))).toStrictEqual(ops);
+    });
+
     // Customer case #1
     test('Invalid links styles', () => {
         const ops = deltaToMdConverter.markdownToDelta("[Google](https://google.com) ,_\n\n[Google 2](https://google.com) ,_\n\n_[Google 3]https://google.com)");

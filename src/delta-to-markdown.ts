@@ -1,10 +1,5 @@
-import { CustomNode, NodeType } from './utils/Node';
-import { IDeltaMention, deltaToNodes } from './delta-to-nodes';
-
-export enum ListType {
-    Bullet = 'bullet',
-    Ordered = 'ordered'
-}
+import { CustomNode, NodeType } from './utils/Node.js';
+import { IDeltaMention, ListType, deltaToNodes } from './delta-to-nodes.js';
 
 class DeltaToMarkdown {
     private readonly _HEADER_CHARS = [
@@ -29,6 +24,17 @@ class DeltaToMarkdown {
         } else {
             return `${content}\n${Array(content.length + 1).join(after)}`;
         }
+    }
+
+    private _getInlineFormatting(marker: string, content: string): string {
+        // Markers around whitespace only would make empty formatting like ****
+        if (content.trim() === '') {
+            return content;
+        }
+
+        const leadingSpaces = content.match(/^\s*/)?.[0] || '';
+        const trailingSpaces = content.match(/\s*$/)?.[0] || '';
+        return `${leadingSpaces}${marker}${content.trim()}${marker}${trailingSpaces}`;
     }
 
     private _getListFormatting(listType: ListType, indent: number, numeric: number, content: string): string {
@@ -64,7 +70,9 @@ class DeltaToMarkdown {
     }
 
     private _getNodeText(node: CustomNode | null, content: string, options: any, skipResettingList = false): string {
-        if (node?.type && node?.type !== NodeType.List && !skipResettingList) {
+        // Any content outside a list ends it, so the next list starts numbering again
+        const hasContent = node?.type != null || content.trim() !== '';
+        if (node && node.type !== NodeType.List && hasContent && !skipResettingList) {
             this._listLevel = {};
         }
 
@@ -76,10 +84,7 @@ class DeltaToMarkdown {
                     subBoldContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
                 }
 
-                let newBoldText = subBoldContent ? subBoldContent : content;
-                const boldLeadingSpaces = newBoldText.match(/^\s*/)?.[0] || '';
-                const boldTrailingSpaces = newBoldText.match(/\s*$/)?.[0] || '';
-                return `${boldLeadingSpaces}**${newBoldText.trim()}**${boldTrailingSpaces}`;
+                return this._getInlineFormatting('**', subBoldContent ? subBoldContent : content);
 
             case NodeType.Italic:
                 let subItalicContent = '';
@@ -88,10 +93,7 @@ class DeltaToMarkdown {
                     subItalicContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
                 }
 
-                let newItalicText = subItalicContent ? subItalicContent : content;
-                const italicLeadingSpaces = newItalicText.match(/^\s*/)?.[0] || '';
-                const italicTrailingSpaces = newItalicText.match(/\s*$/)?.[0] || '';
-                return `${italicLeadingSpaces}_${newItalicText.trim()}_${italicTrailingSpaces}`;
+                return this._getInlineFormatting('_', subItalicContent ? subItalicContent : content);
 
             case NodeType.Strike:
                 let subStrikeContent = '';
@@ -100,10 +102,7 @@ class DeltaToMarkdown {
                     subStrikeContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
                 }
 
-                let newStrikeText = subStrikeContent ? subStrikeContent : content;
-                const strikeLeadingSpaces = newStrikeText.match(/^\s*/)?.[0] || '';
-                const strikeTrailingSpaces = newStrikeText.match(/\s*$/)?.[0] || '';
-                return `${strikeLeadingSpaces}~~${newStrikeText.trim()}~~${strikeTrailingSpaces}`;
+                return this._getInlineFormatting('~~', subStrikeContent ? subStrikeContent : content);
 
             case NodeType.Code:
                 let subCodeContent = '';
@@ -111,13 +110,16 @@ class DeltaToMarkdown {
                 for (const subNode of subCodeNodes) {
                     subCodeContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
                 }
-                let newCodeText = subCodeContent ? subCodeContent : content;
-                const codeLeadingSpaces = newCodeText.match(/^\s*/)?.[0] || '';
-                const codeTrailingSpaces = newCodeText.match(/\s*$/)?.[0] || '';
-                return `${codeLeadingSpaces}\`${newCodeText.trim()}\`${codeTrailingSpaces}`;
+                return this._getInlineFormatting('`', subCodeContent ? subCodeContent : content);
 
             case NodeType.Link:
-                return `[${content}](${options.link})`;
+                let subLinkContent = '';
+                const subLinkNodes = node?.children || [];
+                for (const subNode of subLinkNodes) {
+                    subLinkContent += this._getNodeText(subNode, subNode.textContent, subNode.options, true);
+                }
+
+                return `[${subLinkContent ? subLinkContent : content}](${options.link})`;
 
             case NodeType.Header:
                 let subHeaderContent = '';

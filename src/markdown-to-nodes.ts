@@ -1,4 +1,4 @@
-import { CustomNode, NodeType } from "./utils/Node";
+import { CustomNode, NodeType } from "./utils/Node.js";
 import { Parser } from 'simple-text-parser';
 
 export interface IStringMention {
@@ -9,19 +9,34 @@ export interface IStringMention {
 }
 
 class MarkdownToNodes {
+    private _codeSpans: string[] = [];
 
     constructor(public mentions?: IStringMention[]) { }
+
+    // Code span content becomes a private use token, so no rule matches inside it
+    private _protectCodeSpans(md: string): string {
+        return md.replace(/`([^`\n]*)`/g, (tag, content) => {
+            const index = this._codeSpans.push(content) - 1;
+            const digits = index.toString().replace(/[0-9]/g, digit => String.fromCharCode(0xE010 + Number(digit)));
+
+            return '`\uE000' + digits + '\uE001`';
+        });
+    }
+
+    private _restoreCodeSpans(node: CustomNode | null): void {
+        while (node) {
+            node.textContent = node.textContent.replace(/\uE000([\uE010-\uE019]+)\uE001/g, (tag, digits: string) => {
+                const index = digits.replace(/[\uE010-\uE019]/g, digit => (digit.charCodeAt(0) - 0xE010).toString());
+                return this._codeSpans[Number(index)];
+            });
+            node.children.forEach(child => this._restoreCodeSpans(child));
+            node = node.nextNode;
+        }
+    }
 
     private _parseText(text: string): any {
         const parser = new Parser();
 
-        if (this.mentions && this.mentions.length > 0) {
-            for (const mention of this.mentions) {
-                parser.addRule(mention.reg, (tag, ...args): any => {
-                    return { type: NodeType.Mention, text: tag, value: { type: mention.type, args: args } };
-                });
-            }
-        }
         // Header 1
         parser.addRule(/(.*)\n=+\n[\n$]?/gi, (tag, cleanTag): any => {
             return { type: NodeType.Header, text: tag, value: {text: cleanTag, options: {header: 1}} };
@@ -52,6 +67,22 @@ class MarkdownToNodes {
             }
             return { type: NodeType.List, text: tag, value: {text: cleanTag, options: options} };
         });
+        // Quote
+        parser.addRule(/(^|\n)\>\s(.*)[\n$]/gi, (tag, lines, cleanTag): any => {
+            return { type: NodeType.Blockquote, text: tag, value: {text: cleanTag} };
+        });
+        // Block Code
+        parser.addRule(/(^|\n)    (.*)[\n$]/gi, (tag, lines, cleanTag): any => {
+            return { type: NodeType.CodeBlock, text: tag, value: {text: cleanTag} };
+        });
+        // Mentions come after block rules, so a block keeps its format around a mention
+        if (this.mentions && this.mentions.length > 0) {
+            for (const mention of this.mentions) {
+                parser.addRule(mention.reg, (tag, ...args): any => {
+                    return { type: NodeType.Mention, text: tag, value: { type: mention.type, args: args } };
+                });
+            }
+        }
         // Bold
         parser.addRule(/\*\*((?:[^\*])*)?\*\*/gi, (tag, cleanTag): any => {
             return { type: NodeType.Bold, text: tag, value: {text: cleanTag || ''} };
@@ -67,24 +98,16 @@ class MarkdownToNodes {
             return { type: NodeType.Strike, text: tag, value: {text: cleanTag} };
         });
         // Md Link
-        parser.addRule(/\[(.*?)\]\(([-a-zA-Z0-9@:%_\+.~!,#?&\/\(\)=]*)\)/gi, (tag, linkLabel, linkUrl): any => {
+        parser.addRule(/\[(.*?)\]\(([-a-zA-Z0-9@:%_\+.~!,#?&\/\(\)=;\*'$]*)\)/gi, (tag, linkLabel, linkUrl): any => {
             return { type: NodeType.Link, text: tag, value: {text: linkLabel, options: {link: linkUrl}} };
         });
         // Link
         // parser.addRule(/(?:^|\n)((?:http(s)?:\/\/.)?(?:[\w]+\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-z]{1,63}\b(?:[-a-zA-Z0-9@:%_\+.~#!?&//=,]*))[\n$]/gi, (tag, linkUrl): any => {
         //     return { type: NodeType.Link, text: tag, value: {text: linkUrl, options: {link: linkUrl}} };
         // });
-        // Quote
-        parser.addRule(/(^|\n)\>\s(.*)[\n$]/gi, (tag, lines, cleanTag): any => {
-            return { type: NodeType.Blockquote, text: tag, value: {text: cleanTag} };
-        });
         // Code
         parser.addRule(/\`([^`]*)\`/gi, (tag, cleanTag): any => {
             return { type: NodeType.Code, text: tag, value: {text: cleanTag} };
-        });
-        // Block Code
-        parser.addRule(/(^|\n)    (.*)[\n$]/gi, (tag, lines, cleanTag): any => {
-            return { type: NodeType.CodeBlock, text: tag, value: {text: cleanTag} };
         });
 
         const tree = parser.toTree(text);
@@ -92,7 +115,7 @@ class MarkdownToNodes {
         for (let i = 0; i < tree.length; i++) {
             const treeItem = tree[i];
             const treeType = treeItem.type as any;
-            if (treeType !== 'text' && treeType !== NodeType.Link) {
+            if (treeType !== 'text' && treeType !== NodeType.Link && treeType !== NodeType.CodeBlock) {
                 const subTree = this._parseText((treeItem.value as any).text || ' ');
 
                 const before = (treeItem.value as any).before;
@@ -139,9 +162,21 @@ class MarkdownToNodes {
         return newTypes;
     }
 
+    private _findMention(treeItem: any): { mention: IStringMention, value: { label: string; value: string; } } | null {
+        const mention = this.mentions?.find(m => m.type === treeItem.value.type);
+        const value = mention?.values.find(mv => mv.value.toString() === treeItem.value.args[0].toString());
+
+        return mention && value ? { mention, value } : null;
+    }
+
     private _convertTreeNodesToCustomNodes(treeNodes: any, previousNode: CustomNode, types: NodeType[] = [], subItem = false): CustomNode {
         let lastNode = previousNode;
-        for (const treeItem of treeNodes) {
+        for (let treeItem of treeNodes) {
+            // Unknown mention values stay as the original text
+            if (treeItem.type === NodeType.Mention && !this._findMention(treeItem)) {
+                treeItem = { type: 'text', text: treeItem.text, subTree: [] };
+            }
+
             if (treeItem.type === 'text' || treeItem.type === NodeType.Link) {
                 if (treeItem.type === 'text' && lastNode.textContent === '\n' && lastNode.textContent === treeItem.text) {
                     continue;
@@ -180,29 +215,23 @@ class MarkdownToNodes {
             } else if (treeItem.type === NodeType.Mention) {
                 const node = new CustomNode();
                 node.type = NodeType.Mention;
-                const mention = this.mentions?.find(m => m.type === treeItem.value.type);
-                const mValue = mention?.values.find(mv => mv.value.toString() === treeItem.value.args[0].toString());
-                if (mention && mValue) {
-                    node.options = {
-                        "index": "0",
-                        "denotationChar": mention.denotationChar,
-                        "value": mValue.label,
-                        "id": mValue.value,
-                        "type": treeItem.value.type,
-                    };
-                } else {
-                    node.options = {
-                        "index": "0",
-                        "denotationChar": mention?.denotationChar,
-                        "value": '',
-                        "id": treeItem.value.userId,
-                        "type": 'mention',
-                    };
-                }
+                const { mention, value } = this._findMention(treeItem)!;
+                node.options = {
+                    "index": "0",
+                    "denotationChar": mention.denotationChar,
+                    "value": value.label,
+                    "id": value.value,
+                    "type": treeItem.value.type,
+                };
 
-                node.previousNode = lastNode;
-                lastNode.nextNode = node;
-                lastNode = node;
+                if (subItem) {
+                    lastNode.type = types[0];
+                    lastNode.children.push(node);
+                } else {
+                    node.previousNode = lastNode;
+                    lastNode.nextNode = node;
+                    lastNode = node;
+                }
             } else if (treeItem.subTree.length > 0) {
                 const node = new CustomNode();
                 node.type = null;
@@ -258,12 +287,19 @@ class MarkdownToNodes {
 
         const node = new CustomNode();
         this._convertTreeNodesToCustomNodes(treeNodes, node);
+        this._restoreCodeSpans(node);
 
         return node;
     }
 
+    // Block rules consume the new line around each block, so a block line right after
+    // another line needs a blank line before it, like the markdown generated from delta
+    private _separateBlockLines(md: string): string {
+        return md.replace(/([^\n])\n(?=\#+\s| *\*(?!\*) | *[0-9]+\. |\>\s|    )/g, '$1\n\n');
+    }
+
     convert(md: string): CustomNode {
-        return this._convertToCustomNodes(md + '\n');
+        return this._convertToCustomNodes(this._separateBlockLines(this._protectCodeSpans(md)) + '\n');
     }
 }
 

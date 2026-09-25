@@ -1,4 +1,4 @@
-import { CustomNode, NodeType } from './utils/Node';
+import { CustomNode, NodeType } from './utils/Node.js';
 
 export enum ListType {
     Bullet = 'bullet',
@@ -13,12 +13,6 @@ export interface IDeltaMention {
 }
 
 class DeltaToNodes {
-    private readonly _HEADER_CHARS = [
-        { before: '', after: '=' },
-        { before: '', after: '-' },
-        { before: '###', after: '' },
-    ]
-
     constructor(public mentions?: IDeltaMention[]) { }
 
     private _getNodeTypes(attribute: any): NodeType[] {

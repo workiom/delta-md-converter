@@ -1038,4 +1038,55 @@ describe('Delta to Markdown', () => {
 
         expect(md).toEqual("[Google](https://google.com) ,\n\n_[Google 2 ,](https://google.com)_\n\n_[Google 3]https://google.com)");
     });
+    test('Whitespace only formatting stays plain text', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            { insert: "a" },
+            { insert: " ", attributes: { bold: true } },
+            { insert: "b" },
+            { insert: " ", attributes: { italic: true } },
+            { insert: "c" },
+            { insert: " ", attributes: { strike: true } },
+            { insert: "d" },
+            { insert: " ", attributes: { code: true } },
+            { insert: "e\n" },
+        ]);
+
+        expect(md).toEqual("a b c d e");
+    });
+    test('Code inside link keeps link label', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            { insert: "x", attributes: { link: "http://link.com", code: true } },
+            { insert: " " },
+            { insert: "y", attributes: { bold: true, link: "http://link.com", code: true } },
+            { insert: "\n" },
+        ]);
+
+        expect(md).toEqual("[`x`](http://link.com) **[`y`](http://link.com)**");
+    });
+    test('Ordered list numbering restarts after plain paragraph', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            { insert: "a" },
+            { insert: "\n", attributes: { list: "ordered" } },
+            { insert: "b" },
+            { insert: "\n", attributes: { list: "ordered" } },
+            { insert: "para\n" },
+            { insert: "c" },
+            { insert: "\n", attributes: { list: "ordered" } },
+        ]);
+
+        expect(md).toEqual("1. a\n\n2. b\n\npara\n\n1. c");
+    });
+
+    test('Ordered list numbering restarts after bold paragraph', () => {
+        const md = deltaToMdConverter.deltaToMarkdown([
+            { insert: "a" },
+            { insert: "\n", attributes: { list: "ordered" } },
+            { insert: "para", attributes: { bold: true } },
+            { insert: "\n" },
+            { insert: "c" },
+            { insert: "\n", attributes: { list: "ordered" } },
+        ]);
+
+        expect(md).toEqual("1. a\n\n**para**\n\n1. c");
+    });
 });
