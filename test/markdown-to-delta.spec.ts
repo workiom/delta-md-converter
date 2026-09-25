@@ -1402,6 +1402,36 @@ describe('Markdown to Delta', () => {
         ]);
     });
 
+    test('Paragraph after code block has no extra empty line', () => {
+        const ops = deltaToMdConverter.markdownToDelta("    raw\n\npara");
+
+        expect(ops).toStrictEqual([
+            { insert: "raw" },
+            { insert: "\n", attributes: { "code-block": true } },
+            { insert: "para\n" },
+        ]);
+    });
+
+    test('Paragraph after blockquote has no extra empty line', () => {
+        const ops = deltaToMdConverter.markdownToDelta("> quote\n\npara");
+
+        expect(ops).toStrictEqual([
+            { insert: "quote" },
+            { insert: "\n", attributes: { blockquote: true } },
+            { insert: "para\n" },
+        ]);
+    });
+
+    test('Round trip keeps empty lines after code block stable', () => {
+        const ops = [
+            { insert: "raw" },
+            { insert: "\n", attributes: { "code-block": true } },
+            { insert: "para\n" },
+        ];
+
+        expect(deltaToMdConverter.markdownToDelta(deltaToMdConverter.deltaToMarkdown(ops))).toStrictEqual(ops);
+    });
+
     // Customer case #1
     test('Invalid links styles', () => {
         const ops = deltaToMdConverter.markdownToDelta("[Google](https://google.com) ,_\n\n[Google 2](https://google.com) ,_\n\n_[Google 3]https://google.com)");

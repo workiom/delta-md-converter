@@ -289,8 +289,8 @@ class MarkdownToDelta {
             // Change double lines in any text
             opItem.insert = opItem.insert.replace(/\n\n/gi, '\n');
 
-            // Skip new line after list
-            if (opItem.insert.startsWith('\n') && opItem.insert.length > 1 && lastOps?.attributes?.list) {
+            // Skip new line after block
+            if (opItem.insert.startsWith('\n') && opItem.insert.length > 1 && lastOpsWithoutNewLine) {
                 opItem.insert = opItem.insert.substring(1, opItem.insert.length);
             }
 
