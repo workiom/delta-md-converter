@@ -1,10 +1,5 @@
 import { CustomNode, NodeType } from './utils/Node.js';
-import { IDeltaMention, deltaToNodes } from './delta-to-nodes.js';
-
-export enum ListType {
-    Bullet = 'bullet',
-    Ordered = 'ordered'
-}
+import { IDeltaMention, ListType, deltaToNodes } from './delta-to-nodes.js';
 
 class DeltaToMarkdown {
     private readonly _HEADER_CHARS = [

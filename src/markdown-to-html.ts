@@ -1,11 +1,6 @@
 import { CustomNode, NodeType } from './utils/Node.js';
 import { IStringMention, markdownToNodes } from './markdown-to-nodes.js';
 
-export enum ListType {
-    Bullet = 'bullet',
-    Ordered = 'ordered'
-}
-
 class MdToHtml {
     private readonly _HEADER_CHARS = [
         'h1',
