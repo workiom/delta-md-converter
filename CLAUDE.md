@@ -51,11 +51,15 @@ One Delta `"\n"` equals a blank line (`\n\n`) in Markdown. Delta → Markdown do
 ### Markdown parser (`markdown-to-nodes.ts`)
 
 `_parseText()` registers regex rules on `simple-text-parser`, and registration order sets precedence. The first rule that matches anywhere in the string splits it, and the leftover segments are re-parsed against the full rule list.
-- Mention rules are registered first.
+- Order: block rules (headers, lists, quote, 4-space code block), then mentions, then inline rules (bold, italic, strike, link, code). An inline or mention match registered before a block rule would split the line and the block would be lost.
 - List rules come before the 4-space code-block rule, so indented list items stay lists.
-- The inner text of each match is re-parsed recursively for nested formatting. Link labels are the exception and are never parsed further.
+- The inner text of each match is re-parsed recursively for nested formatting. Link labels and code block content are never parsed further.
 
 Block rules end in `[\n$]`. That is a character class matching a newline or a literal `$`, not end-of-input. The rules work only because both `markdownToDelta` and `markdownToHtml` append `\n\n` to the input.
+
+`convert()` preprocesses the input before parsing:
+- `_protectCodeSpans()` swaps each single-line `` `code` `` span's content for a private-use token (U+E000..U+E019). `_restoreCodeSpans()` puts it back in the finished nodes, so no rule matches inside inline code.
+- `_separateBlockLines()` turns a single newline before a block line into a blank line. Block rules consume the newline on both sides, so consecutive block lines need the blank-line form. Lookbehind would avoid this but breaks older Safari.
 
 ### Markdown dialect
 
