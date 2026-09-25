@@ -237,6 +237,27 @@ describe('Delta to HTML', () => {
         expect(html).toEqual("<ol><li>a<ul><li>b<ol><li>c</li></ol></li></ul></li><li>d</li></ol><br>Text");
     });
 
+    test('Bold inside blockquote', () => {
+        const html = mdToHtmlConverter.markdownToHtml("> **Bold** normal");
+
+        expect(html).toEqual("<blockquote><b>Bold</b> normal</blockquote>");
+    });
+
+    test('Mention inside list item', () => {
+        const mentions: IStringMention[] = [{
+            type: 'mention',
+            reg: /_U_([0-9]+)/gi,
+            denotationChar: '@',
+            values: [{
+                label: 'User 1',
+                value: '5555'
+            }]
+        }];
+        const html = mdToHtmlConverter.markdownToHtml("* Ask _U_5555 please", mentions);
+
+        expect(html).toEqual("<ul><li>Ask <span class=\"mention-item mention-type\">@User 1</span> please</li></ul>");
+    });
+
     // Customer case
     test('Multiline Inside Blockquote', () => {
         const html = mdToHtmlConverter.markdownToHtml("[Google](https://google.com) ,\n\n_[Google 2 ,](https://google.com)_\n\n_[Google 3](https://google.com)");

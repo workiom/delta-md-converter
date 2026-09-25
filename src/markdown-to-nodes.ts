@@ -15,13 +15,6 @@ class MarkdownToNodes {
     private _parseText(text: string): any {
         const parser = new Parser();
 
-        if (this.mentions && this.mentions.length > 0) {
-            for (const mention of this.mentions) {
-                parser.addRule(mention.reg, (tag, ...args): any => {
-                    return { type: NodeType.Mention, text: tag, value: { type: mention.type, args: args } };
-                });
-            }
-        }
         // Header 1
         parser.addRule(/(.*)\n=+\n[\n$]?/gi, (tag, cleanTag): any => {
             return { type: NodeType.Header, text: tag, value: {text: cleanTag, options: {header: 1}} };
@@ -52,6 +45,22 @@ class MarkdownToNodes {
             }
             return { type: NodeType.List, text: tag, value: {text: cleanTag, options: options} };
         });
+        // Quote
+        parser.addRule(/(^|\n)\>\s(.*)[\n$]/gi, (tag, lines, cleanTag): any => {
+            return { type: NodeType.Blockquote, text: tag, value: {text: cleanTag} };
+        });
+        // Block Code
+        parser.addRule(/(^|\n)    (.*)[\n$]/gi, (tag, lines, cleanTag): any => {
+            return { type: NodeType.CodeBlock, text: tag, value: {text: cleanTag} };
+        });
+        // Mentions come after block rules, so a block keeps its format around a mention
+        if (this.mentions && this.mentions.length > 0) {
+            for (const mention of this.mentions) {
+                parser.addRule(mention.reg, (tag, ...args): any => {
+                    return { type: NodeType.Mention, text: tag, value: { type: mention.type, args: args } };
+                });
+            }
+        }
         // Bold
         parser.addRule(/\*\*((?:[^\*])*)?\*\*/gi, (tag, cleanTag): any => {
             return { type: NodeType.Bold, text: tag, value: {text: cleanTag || ''} };
@@ -74,17 +83,9 @@ class MarkdownToNodes {
         // parser.addRule(/(?:^|\n)((?:http(s)?:\/\/.)?(?:[\w]+\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-z]{1,63}\b(?:[-a-zA-Z0-9@:%_\+.~#!?&//=,]*))[\n$]/gi, (tag, linkUrl): any => {
         //     return { type: NodeType.Link, text: tag, value: {text: linkUrl, options: {link: linkUrl}} };
         // });
-        // Quote
-        parser.addRule(/(^|\n)\>\s(.*)[\n$]/gi, (tag, lines, cleanTag): any => {
-            return { type: NodeType.Blockquote, text: tag, value: {text: cleanTag} };
-        });
         // Code
         parser.addRule(/\`([^`]*)\`/gi, (tag, cleanTag): any => {
             return { type: NodeType.Code, text: tag, value: {text: cleanTag} };
-        });
-        // Block Code
-        parser.addRule(/(^|\n)    (.*)[\n$]/gi, (tag, lines, cleanTag): any => {
-            return { type: NodeType.CodeBlock, text: tag, value: {text: cleanTag} };
         });
 
         const tree = parser.toTree(text);
@@ -201,9 +202,14 @@ class MarkdownToNodes {
                     "type": treeItem.value.type,
                 };
 
-                node.previousNode = lastNode;
-                lastNode.nextNode = node;
-                lastNode = node;
+                if (subItem) {
+                    lastNode.type = types[0];
+                    lastNode.children.push(node);
+                } else {
+                    node.previousNode = lastNode;
+                    lastNode.nextNode = node;
+                    lastNode = node;
+                }
             } else if (treeItem.subTree.length > 0) {
                 const node = new CustomNode();
                 node.type = null;

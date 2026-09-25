@@ -1255,6 +1255,114 @@ describe('Markdown to Delta', () => {
         ]);
     });
 
+    test('Mention inside bullet list item', () => {
+        const mentions: IStringMention[] = [{
+            type: 'mention',
+            reg: /_U_([0-9]+)/gi,
+            denotationChar: '@',
+            values: [{
+                label: 'User Name',
+                value: '1234'
+            }]
+        }];
+        const ops = deltaToMdConverter.markdownToDelta("* Hi _U_1234 there", mentions);
+
+        expect(ops).toStrictEqual([
+            { insert: "Hi " },
+            { insert: { mention: { index: "0", denotationChar: "@", value: "User Name", id: "1234" } } },
+            { insert: " there" },
+            { insert: "\n", attributes: { list: "bullet" } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Mention inside blockquote', () => {
+        const mentions: IStringMention[] = [{
+            type: 'mention',
+            reg: /_U_([0-9]+)/gi,
+            denotationChar: '@',
+            values: [{
+                label: 'User Name',
+                value: '1234'
+            }]
+        }];
+        const ops = deltaToMdConverter.markdownToDelta("> Hi _U_1234 there", mentions);
+
+        expect(ops).toStrictEqual([
+            { insert: "Hi " },
+            { insert: { mention: { index: "0", denotationChar: "@", value: "User Name", id: "1234" } } },
+            { insert: " there" },
+            { insert: "\n", attributes: { blockquote: true } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Mention inside header 3', () => {
+        const mentions: IStringMention[] = [{
+            type: 'mention',
+            reg: /_U_([0-9]+)/gi,
+            denotationChar: '@',
+            values: [{
+                label: 'User Name',
+                value: '1234'
+            }]
+        }];
+        const ops = deltaToMdConverter.markdownToDelta("### Hi _U_1234 there", mentions);
+
+        expect(ops).toStrictEqual([
+            { insert: "Hi " },
+            { insert: { mention: { index: "0", denotationChar: "@", value: "User Name", id: "1234" } } },
+            { insert: " there" },
+            { insert: "\n", attributes: { header: 3 } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Bold inside blockquote', () => {
+        const ops = deltaToMdConverter.markdownToDelta("> **Bold** normal");
+
+        expect(ops).toStrictEqual([
+            { insert: "Bold", attributes: { bold: true } },
+            { insert: " normal" },
+            { insert: "\n", attributes: { blockquote: true } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Italic inside blockquote', () => {
+        const ops = deltaToMdConverter.markdownToDelta("> _Italic_ normal");
+
+        expect(ops).toStrictEqual([
+            { insert: "Italic", attributes: { italic: true } },
+            { insert: " " },
+            { insert: "normal" },
+            { insert: "\n", attributes: { blockquote: true } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Strike inside blockquote', () => {
+        const ops = deltaToMdConverter.markdownToDelta("> ~~Strike~~ normal");
+
+        expect(ops).toStrictEqual([
+            { insert: "Strike", attributes: { strike: true } },
+            { insert: " normal" },
+            { insert: "\n", attributes: { blockquote: true } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Link inside blockquote', () => {
+        const ops = deltaToMdConverter.markdownToDelta("> [Link](http://link.com) normal");
+
+        expect(ops).toStrictEqual([
+            { insert: "Link", attributes: { link: "http://link.com" } },
+            { insert: " normal" },
+            { insert: "\n", attributes: { blockquote: true } },
+            { insert: "\n" },
+        ]);
+    });
+
     // Customer case #1
     test('Invalid links styles', () => {
         const ops = deltaToMdConverter.markdownToDelta("[Google](https://google.com) ,_\n\n[Google 2](https://google.com) ,_\n\n_[Google 3]https://google.com)");

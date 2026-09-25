@@ -132,6 +132,14 @@ class MarkdownToDelta {
         return content;
     }
 
+    private _getMentionOps(node: CustomNode): any {
+        const options = { ...node.options };
+        const type = options.type;
+        delete options.type;
+
+        return { insert: { [type]: options } };
+    }
+
     private _canCombine(type: NodeType | null): boolean {
         switch (type) {
             case NodeType.List:
@@ -167,6 +175,11 @@ class MarkdownToDelta {
                         ops.push(opsItem);
                     } else {
                         for (const child of lastNode.children) {
+                            if (child.type === NodeType.Mention) {
+                                ops.push(this._getMentionOps(child));
+                                continue;
+                            }
+
                             const attributes = this._getAttributesFromNodeType(child);
                             const text = this._getTextsFromNodeType(child);
 
@@ -195,14 +208,7 @@ class MarkdownToDelta {
                         ops.push(opsItem);
                     }
                 } else if (lastNode.type === NodeType.Mention) {
-                    const options = lastNode.options;
-                    const type = options.type;
-                    delete options.type;
-                    const insertObj = { [type]: options };
-
-                    ops.push({
-                        insert: insertObj
-                    });
+                    ops.push(this._getMentionOps(lastNode));
                 } else {
                     const attributes = this._getAttributesFromNodeType(lastNode);
                     const text = this._getTextsFromNodeType(lastNode);
