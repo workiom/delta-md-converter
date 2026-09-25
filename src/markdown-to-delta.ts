@@ -133,11 +133,16 @@ class MarkdownToDelta {
     }
 
     private _canCombine(type: NodeType | null): boolean {
-        if (type === NodeType.List) {
-            return false;
-        }
+        switch (type) {
+            case NodeType.List:
+            case NodeType.Header:
+            case NodeType.Blockquote:
+            case NodeType.CodeBlock:
+                return false;
 
-        return true;
+            default:
+                return true;
+        }
     }
 
     private _convertCustomNodesToDelta(firstNode: CustomNode | null): any[] {

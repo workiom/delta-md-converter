@@ -1221,6 +1221,40 @@ describe('Markdown to Delta', () => {
         ]);
     });
 
+    // Inline formatting inside block
+    test('Bold inside header 3 applies only to bold text', () => {
+        const ops = deltaToMdConverter.markdownToDelta("### **Bold** normal");
+
+        expect(ops).toStrictEqual([
+            { insert: "Bold", attributes: { bold: true } },
+            { insert: " normal" },
+            { insert: "\n", attributes: { header: 3 } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Bold inside header 1 applies only to bold text', () => {
+        const ops = deltaToMdConverter.markdownToDelta("**Bold** normal\n===");
+
+        expect(ops).toStrictEqual([
+            { insert: "Bold", attributes: { bold: true } },
+            { insert: " normal" },
+            { insert: "\n", attributes: { header: 1 } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Code inside blockquote applies only to code text', () => {
+        const ops = deltaToMdConverter.markdownToDelta("> `code` normal");
+
+        expect(ops).toStrictEqual([
+            { insert: "code", attributes: { code: true } },
+            { insert: " normal" },
+            { insert: "\n", attributes: { blockquote: true } },
+            { insert: "\n" },
+        ]);
+    });
+
     // Customer case #1
     test('Invalid links styles', () => {
         const ops = deltaToMdConverter.markdownToDelta("[Google](https://google.com) ,_\n\n[Google 2](https://google.com) ,_\n\n_[Google 3]https://google.com)");
