@@ -1393,6 +1393,92 @@ describe('Markdown to Delta', () => {
         ]);
     });
 
+    test('Inline code inside part of bold', () => {
+        const ops = deltaToMdConverter.markdownToDelta("**a `b`**");
+
+        expect(ops).toStrictEqual([
+            { insert: "a ", attributes: { bold: true } },
+            { insert: "b", attributes: { bold: true, code: true } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Italic inside part of bold', () => {
+        const ops = deltaToMdConverter.markdownToDelta("**a _b_ c**");
+
+        expect(ops).toStrictEqual([
+            { insert: "a ", attributes: { bold: true } },
+            { insert: "b", attributes: { bold: true, italic: true } },
+            { insert: " c", attributes: { bold: true } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Link inside part of bold', () => {
+        const ops = deltaToMdConverter.markdownToDelta("**a [l](http://link.com) b**");
+
+        expect(ops).toStrictEqual([
+            { insert: "a ", attributes: { bold: true } },
+            { insert: "l", attributes: { bold: true, link: "http://link.com" } },
+            { insert: " b", attributes: { bold: true } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Inline code inside part of bold inside list', () => {
+        const ops = deltaToMdConverter.markdownToDelta("* **a `b` c**");
+
+        expect(ops).toStrictEqual([
+            { insert: "a ", attributes: { bold: true } },
+            { insert: "b", attributes: { bold: true, code: true } },
+            { insert: " c", attributes: { bold: true } },
+            { insert: "\n", attributes: { list: "bullet" } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Italic inside part of bold inside blockquote', () => {
+        const ops = deltaToMdConverter.markdownToDelta("> **a _b_**");
+
+        expect(ops).toStrictEqual([
+            { insert: "a ", attributes: { bold: true } },
+            { insert: "b", attributes: { bold: true, italic: true } },
+            { insert: "\n", attributes: { blockquote: true } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Inline code inside link', () => {
+        const ops = deltaToMdConverter.markdownToDelta("Open [`docs`](https://example.com/docs) now");
+
+        expect(ops).toStrictEqual([
+            { insert: "Open " },
+            { insert: "docs", attributes: { link: "https://example.com/docs", code: true } },
+            { insert: " now\n" },
+        ]);
+    });
+
+    test('Inline code inside part of link', () => {
+        const ops = deltaToMdConverter.markdownToDelta("[Open `docs` now](http://link.com)");
+
+        expect(ops).toStrictEqual([
+            { insert: "Open ", attributes: { link: "http://link.com" } },
+            { insert: "docs", attributes: { link: "http://link.com", code: true } },
+            { insert: " now", attributes: { link: "http://link.com" } },
+            { insert: "\n" },
+        ]);
+    });
+
+    test('Inline code inside bold link inside list', () => {
+        const ops = deltaToMdConverter.markdownToDelta("* **[`docs`](http://link.com)**");
+
+        expect(ops).toStrictEqual([
+            { insert: "docs", attributes: { bold: true, link: "http://link.com", code: true } },
+            { insert: "\n", attributes: { list: "bullet" } },
+            { insert: "\n" },
+        ]);
+    });
+
     test('Link url with semicolon, star, apostrophe and dollar', () => {
         const ops = deltaToMdConverter.markdownToDelta("[a](http://link.com/a;b*c'd$e)");
 
@@ -1450,10 +1536,22 @@ describe('Markdown to Delta', () => {
                 insert: "\n",
             },
             {
-                insert: "\nGoogle 2 ,",
+                insert: "\n",
+                attributes: {
+                    italic: true,
+                },
+            },
+            {
+                insert: "Google 2",
                 attributes: {
                     italic: true,
                     link: "https://google.com",
+                },
+            },
+            {
+                insert: " ,",
+                attributes: {
+                    italic: true,
                 },
             },
             {

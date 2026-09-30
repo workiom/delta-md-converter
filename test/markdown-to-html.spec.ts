@@ -329,6 +329,18 @@ describe('Delta to HTML', () => {
         expect(html).toEqual("<a href=\"http://link.com/?a=1&amp;b=2\" target=\"_blank\">Link</a>");
     });
 
+    test('Inline code inside link', () => {
+        const html = mdToHtmlConverter.markdownToHtml("Open [`docs`](https://example.com/docs) now");
+
+        expect(html).toEqual("Open <a href=\"https://example.com/docs\" target=\"_blank\"><code>docs</code></a> now");
+    });
+
+    test('Inline code inside part of link', () => {
+        const html = mdToHtmlConverter.markdownToHtml("[Open `docs` now](http://link.com)");
+
+        expect(html).toEqual("<a href=\"http://link.com\" target=\"_blank\">Open <code>docs</code> now</a>");
+    });
+
     test('Keep safe link protocols', () => {
         const html = mdToHtmlConverter.markdownToHtml("[Mail](mailto:a@b.com) [Rel](/path) [Hash](#top)");
 

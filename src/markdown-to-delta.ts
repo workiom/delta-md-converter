@@ -106,30 +106,55 @@ class MarkdownToDelta {
         return attributes;
     }
 
-    private _getAttributesFromNodeType(node: CustomNode, attributes: any = {}): any {
-        attributes = {
-            ...attributes,
-            ...this._getAttributeForType(node)
-        };
-        for (const child of node.children) {
-            attributes = {
-                ...attributes,
-                ...this._getAttributesFromNodeType(child, attributes)
-            };
+    private _getTextOps(text: string, attributes: any): any {
+        const opsItem: any = {
+            insert: text
         }
 
-        return attributes;
+        if (JSON.stringify(attributes) !== '{}') {
+            opsItem.attributes = attributes;
+        }
+
+        return opsItem;
     }
 
-    private _getTextsFromNodeType(node: CustomNode): string {
-        let content = node.textContent;
-
-        for (let i = 0; i < node.children.length; i++) {
-            const child = node.children[i];
-            content += this._getTextsFromNodeType(child);
+    // Each text gets its own op with the attributes of all its parents, so a format
+    // on part of the text does not spread to the rest. Neighbour texts with the same attributes stay one op
+    private _getInlineOps(node: CustomNode, parentAttributes: any = {}): any[] {
+        if (node.type === NodeType.Mention) {
+            return [this._getMentionOps(node)];
         }
 
-        return content;
+        const attributes = {
+            ...parentAttributes,
+            ...this._getAttributeForType(node)
+        };
+
+        if (node.children.length === 0) {
+            return [this._getTextOps(node.textContent, attributes)];
+        }
+
+        const childOps = [this._getTextOps(node.textContent, attributes)];
+        for (const child of node.children) {
+            childOps.push(...this._getInlineOps(child, attributes));
+        }
+
+        const ops: any[] = [];
+        for (const opsItem of childOps) {
+            if (opsItem.insert === '') {
+                continue;
+            }
+
+            const lastOps = ops[ops.length - 1];
+            const sameText = lastOps && typeof lastOps.insert === 'string' && typeof opsItem.insert === 'string';
+            if (sameText && JSON.stringify(lastOps.attributes) === JSON.stringify(opsItem.attributes)) {
+                lastOps.insert += opsItem.insert;
+            } else {
+                ops.push(opsItem);
+            }
+        }
+
+        return ops.length > 0 ? ops : [this._getTextOps('', attributes)];
     }
 
     private _getMentionOps(node: CustomNode): any {
@@ -159,69 +184,15 @@ class MarkdownToDelta {
         const ops: any[] = [];
         while (lastNode) {
             if (lastNode.textContent !== '' || lastNode.previousNode) {
-                if (lastNode.children.length > 0) {
-                    if (this._canCombine(lastNode.type)) {
-                        const attributes = this._getAttributesFromNodeType(lastNode);
-                        const text = this._getTextsFromNodeType(lastNode);
-
-                        const opsItem: any = {
-                            insert: text
-                        }
-
-                        if (JSON.stringify(attributes) !== '{}') {
-                            opsItem.attributes = attributes;
-                        }
-
-                        ops.push(opsItem);
-                    } else {
-                        for (const child of lastNode.children) {
-                            if (child.type === NodeType.Mention) {
-                                ops.push(this._getMentionOps(child));
-                                continue;
-                            }
-
-                            const attributes = this._getAttributesFromNodeType(child);
-                            const text = this._getTextsFromNodeType(child);
-
-                            const opsItem: any = {
-                                insert: text
-                            }
-
-                            if (JSON.stringify(attributes) !== '{}') {
-                                opsItem.attributes = attributes;
-                            }
-
-                            ops.push(opsItem);
-                        }
-
-                        lastNode.textContent = '\n';
-                        const opsItem: any = {
-                            insert: '\n'
-                        }
-
-                        const attributes = this._getAttributeForType(lastNode);
-
-                        if (JSON.stringify(attributes) !== '{}') {
-                            opsItem.attributes = attributes;
-                        }
-
-                        ops.push(opsItem);
+                if (lastNode.children.length > 0 && !this._canCombine(lastNode.type)) {
+                    for (const child of lastNode.children) {
+                        ops.push(...this._getInlineOps(child));
                     }
-                } else if (lastNode.type === NodeType.Mention) {
-                    ops.push(this._getMentionOps(lastNode));
+
+                    lastNode.textContent = '\n';
+                    ops.push(this._getTextOps('\n', this._getAttributeForType(lastNode)));
                 } else {
-                    const attributes = this._getAttributesFromNodeType(lastNode);
-                    const text = this._getTextsFromNodeType(lastNode);
-
-                    const opsItem: any = {
-                        insert: text
-                    }
-
-                    if (JSON.stringify(attributes) !== '{}') {
-                        opsItem.attributes = attributes;
-                    }
-
-                    ops.push(opsItem);
+                    ops.push(...this._getInlineOps(lastNode));
                 }
             }
 

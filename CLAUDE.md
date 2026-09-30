@@ -44,7 +44,8 @@ Both Markdown paths share `markdown-to-nodes.ts`. A parser change must keep both
 Quill puts block formats (`header`, `blockquote`, `code-block`, `list` + `indent`) on the trailing `"\n"` op, not on the text. Each direction handles this:
 - Delta → nodes: `_mergeNodes()` moves the preceding inline nodes, back to the last newline, into the block node's `children`.
 - Nodes → Delta: `_getAttributeForType()` inserts a synthetic `"\n"` node after block text, carrying the block attribute. It mutates the linked list during traversal.
-- Lists are never merged into a single op (`_canCombine`). Each child becomes its own op, followed by a `"\n"` op that carries `list` and `indent`.
+- Nodes → Delta: `_getInlineOps()` gives each text leaf its own op carrying all ancestor attributes. Neighbouring leaves with equal attributes merge back into one op, so `**a `b`**` becomes `a ` bold plus `b` bold+code.
+- Block nodes (`_canCombine` false) emit their children's ops, followed by a `"\n"` op that carries the block attribute (`list` + `indent`, `header`, etc.). Children are never merged across each other.
 
 One Delta `"\n"` equals a blank line (`\n\n`) in Markdown. Delta → Markdown doubles each newline, and `_normalizeDelta()` collapses `\n\n` back to `\n`.
 
@@ -53,7 +54,8 @@ One Delta `"\n"` equals a blank line (`\n\n`) in Markdown. Delta → Markdown do
 `_parseText()` registers regex rules on `simple-text-parser`, and registration order sets precedence. The first rule that matches anywhere in the string splits it, and the leftover segments are re-parsed against the full rule list.
 - Order: block rules (headers, lists, quote, 4-space code block), then mentions, then inline rules (bold, italic, strike, link, code). An inline or mention match registered before a block rule would split the line and the block would be lost.
 - List rules come before the 4-space code-block rule, so indented list items stay lists.
-- The inner text of each match is re-parsed recursively for nested formatting. Link labels and code block content are never parsed further.
+- The inner text of each match is re-parsed recursively for nested formatting. Code block content is never parsed further.
+- Link labels are parsed for inline code only (`_parseLinkLabel()`), because Delta → Markdown nests `code` inside `link` as ``[`x`](url)``. A label without code stays a leaf link node, and a label with code becomes a link node with children.
 
 Block rules end in `[\n$]`. That is a character class matching a newline or a literal `$`, not end-of-input. The rules work only because both `markdownToDelta` and `markdownToHtml` append `\n\n` to the input.
 
