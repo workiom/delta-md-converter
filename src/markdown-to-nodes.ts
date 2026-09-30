@@ -34,6 +34,28 @@ class MarkdownToNodes {
         }
     }
 
+    private _addCodeRule(parser: Parser): void {
+        parser.addRule(/\`([^`]*)\`/gi, (tag, cleanTag): any => {
+            return { type: NodeType.Code, text: tag, value: {text: cleanTag} };
+        });
+    }
+
+    // Only code spans are parsed in a link label. A label without code stays plain link text
+    private _parseLinkLabel(label: string): any[] {
+        const parser = new Parser();
+        this._addCodeRule(parser);
+
+        const labelTree = parser.toTree(label);
+        if (!labelTree.some(labelItem => (labelItem.type as any) === NodeType.Code)) {
+            return [];
+        }
+
+        return labelTree.map(labelItem => ({
+            ...labelItem,
+            subTree: (labelItem.type as any) === NodeType.Code ? this._parseText((labelItem.value as any).text || ' ') : []
+        }));
+    }
+
     private _parseText(text: string): any {
         const parser = new Parser();
 
@@ -106,9 +128,7 @@ class MarkdownToNodes {
         //     return { type: NodeType.Link, text: tag, value: {text: linkUrl, options: {link: linkUrl}} };
         // });
         // Code
-        parser.addRule(/\`([^`]*)\`/gi, (tag, cleanTag): any => {
-            return { type: NodeType.Code, text: tag, value: {text: cleanTag} };
-        });
+        this._addCodeRule(parser);
 
         const tree = parser.toTree(text);
 
@@ -138,6 +158,11 @@ class MarkdownToNodes {
                     tree.splice(i + 1, 0, {type: 'text', text: after, subTree: []});
                     i++;
                 }
+            } else if (treeType === NodeType.Link) {
+                tree[i] = {
+                    ...treeItem,
+                    subTree: this._parseLinkLabel((treeItem.value as any).text)
+                };
             } else {
                 tree[i] = {
                     ...treeItem,
@@ -177,7 +202,8 @@ class MarkdownToNodes {
                 treeItem = { type: 'text', text: treeItem.text, subTree: [] };
             }
 
-            if (treeItem.type === 'text' || treeItem.type === NodeType.Link) {
+            // A link with inline code in its label goes through the sub tree branch
+            if (treeItem.type === 'text' || (treeItem.type === NodeType.Link && treeItem.subTree.length === 0)) {
                 if (treeItem.type === 'text' && lastNode.textContent === '\n' && lastNode.textContent === treeItem.text) {
                     continue;
                 }

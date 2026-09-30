@@ -1089,4 +1089,16 @@ describe('Delta to Markdown', () => {
 
         expect(md).toEqual("1. a\n\n**para**\n\n1. c");
     });
+
+    test('Inline code link round trip', () => {
+        const ops = [
+            { insert: "Open " },
+            { insert: "docs", attributes: { link: "https://example.com/docs", code: true } },
+            { insert: " now\n" },
+        ];
+        const md = deltaToMdConverter.deltaToMarkdown(ops);
+
+        expect(md).toEqual("Open [`docs`](https://example.com/docs) now");
+        expect(deltaToMdConverter.markdownToDelta(md)).toStrictEqual(ops);
+    });
 });
